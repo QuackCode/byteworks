@@ -103,7 +103,7 @@ class FloorRulesTests(unittest.TestCase):
         self.assertFalse(w.can_harvest())
         w.clock += B.GROW_TICKS["CPU"][1]
         self.assertTrue(w.can_harvest())
-        self.assertEqual(w.harvest(), 1)
+        self.assertEqual(w.harvest(), B.YIELD["CPU"])
         self.assertIsNone(w.get_part())
 
     def test_early_harvest_destroys(self):
@@ -117,15 +117,15 @@ class FloorRulesTests(unittest.TestCase):
         w = world_on("SSD")
         self.assertFalse(w.place("CPU"))           # wrong floor
         self.assertFalse(w.place("SSD"))           # can't afford
-        w.inventory.update(RAM=3, CPU=1)
+        w.inventory.update(B.PLACE_COST["SSD"])
         self.assertTrue(w.place("SSD"))
-        self.assertEqual((w.inventory["RAM"], w.inventory["CPU"]), (0, 0))
-        w.inventory.update(RAM=3, CPU=1)
+        self.assertTrue(all(w.inventory[p] == 0 for p in B.PLACE_COST["SSD"]))
+        w.inventory.update(B.PLACE_COST["SSD"])
         self.assertFalse(w.place("SSD"))           # tile occupied
-        self.assertEqual(w.inventory["RAM"], 3)    # nothing paid
+        self.assertEqual(w.inventory["RAM"], B.PLACE_COST["SSD"]["RAM"])    # nothing paid
 
     def test_faulty_board_raises_and_can_be_replaced(self):
-        w = world_on("BOARD", SSD=2)
+        w = world_on("BOARD", **B.PLACE_COST["BOARD"])
         w.grid()[0][0] = Tile("BOARD", 0, True, None, 0)
         self.assertTrue(w.is_faulty())
         self.assertTrue(w.can_harvest())

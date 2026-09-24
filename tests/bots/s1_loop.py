@@ -1,0 +1,8 @@
+while True:
+    harvest()
+    move(North)
+    harvest()
+    move(North)
+    harvest()
+    move(North)
+    move(East)
