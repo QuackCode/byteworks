@@ -192,5 +192,49 @@ class FloorRulesTests(unittest.TestCase):
         self.assertFalse(w.assemble())
 
 
+from game import unlocks as U  # noqa: E402
+
+
+class UnlockTests(unittest.TestCase):
+    def test_every_requirement_exists_and_tree_is_acyclic(self):
+        seen = set()
+        for u in U.UNLOCKS:  # list order must already be a valid buying order
+            for r in u.requires:
+                self.assertIn(r, seen, f"{u.id} requires {r}, which must come earlier in UNLOCKS")
+            seen.add(u.id)
+
+    def test_buy_pays_and_applies(self):
+        w = World()
+        w.inventory["RAM"] = 100
+        ok, _ = U.buy(w, "loops")
+        self.assertTrue(ok)
+        self.assertIn("loops", w.unlocks)
+        self.assertEqual(w.inventory["RAM"], 100 - U.BY_ID["loops"].cost["RAM"])
+
+    def test_buy_refuses_missing_prereq_money_or_repeat(self):
+        w = World()
+        self.assertFalse(U.buy(w, "loops")[0])               # can't afford
+        w.inventory["RAM"] = 10_000
+        self.assertFalse(U.buy(w, "conditionals")[0])        # missing prerequisite
+        self.assertTrue(U.buy(w, "loops")[0])
+        self.assertFalse(U.buy(w, "loops")[0])               # already bought
+        self.assertFalse(U.buy(w, "nope")[0])
+
+    def test_floor_grid_speed_effects(self):
+        w = World()
+        w.inventory.update(RAM=100_000, CPU=100_000)
+        for uid in ["loops", "variables", "conditionals", "floor_cpu", "speed1", "grid_ram_4"]:
+            self.assertTrue(U.buy(w, uid)[0], uid)
+        self.assertIn("CPU", w.floors)
+        self.assertEqual(w.size("RAM"), 4)
+        self.assertEqual(w.speed_level, 1)
+
+    def test_tree_json_is_plain_data(self):
+        import json
+        data = json.loads(json.dumps(U.tree_json()))
+        self.assertEqual(len(data), len(U.UNLOCKS))
+        self.assertEqual({d["kind"] for d in data} >= {"feature", "floor", "grid", "speed"}, True)
+
+
 if __name__ == "__main__":
     unittest.main()
