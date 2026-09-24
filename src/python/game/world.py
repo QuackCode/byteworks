@@ -112,13 +112,121 @@ class World:
             return gained
         return self._harvest_placed(tile)
 
+    # ---------------------------------------------------------------- sensing
+    def get_part(self):
+        return self.here().part
+
+    def can_harvest(self):
+        return self.is_ready(self.here())
+
+    def is_faulty(self):
+        tile = self.here()
+        return tile.part == "BOARD" and self.is_ready(tile) and tile.faulty
+
+    def measure(self):
+        tile = self.here()
+        return tile.score if tile.part == "GPU" else None
+
+    # ---------------------------------------------------------------- building
+    def place(self, part):
+        if part not in B.PLACE_COST or part != self.floor:
+            return False
+        tile = self.here()
+        replacing_fault = tile.part == "BOARD" and self.is_ready(tile) and tile.faulty
+        if tile.part is not None and not replacing_fault:
+            return False
+        cost = B.PLACE_COST[part]
+        if any(self.inventory[p] < n for p, n in cost.items()):
+            return False
+        for p, n in cost.items():
+            self.inventory[p] -= n
+        faulty = part == "BOARD" and self.rng.random() < B.FAULT_CHANCE
+        score = self.rng.randint(0, 9) if part == "GPU" else None
+        self.grid()[self.x][self.y] = Tile(part, self.clock + self.grow_time(part), faulty, score, self.clock)
+        return True
+
     def _harvest_placed(self, tile):
-        # Filled in by Task 3 (CPU/SSD/BOARD/GPU rules)
-        raise NotImplementedError
+        if not self.is_ready(tile):
+            self.grid()[self.x][self.y] = Tile()      # harvested too early: destroyed
+            return 0
+        part = tile.part
+        if part == "BOARD":
+            if tile.faulty:
+                raise FaultyBoardError(f"The motherboard at {(self.x, self.y)} is faulty!")
+            gained = self._harvest_board_square()
+        elif part == "GPU" and self.gpu_grid_sorted():
+            n = self.size()
+            gained = n * n * n * n
+            self.floors[self.floor]["grid"] = [[Tile() for _ in range(n)] for _ in range(n)]
+        else:
+            gained = B.YIELD[part]
+            self.grid()[self.x][self.y] = Tile()
+        self.inventory[part] += gained
+        return gained
+
+    def _good_board(self, x, y):
+        tile = self.grid()[x][y]
+        return tile.part == "BOARD" and self.is_ready(tile) and not tile.faulty
+
+    def _harvest_board_square(self):
+        n = self.size()
+        for k in range(n, 1, -1):
+            for sx in range(max(0, self.x - k + 1), min(self.x, n - k) + 1):
+                for sy in range(max(0, self.y - k + 1), min(self.y, n - k) + 1):
+                    cells = [(sx + i, sy + j) for i in range(k) for j in range(k)]
+                    if all(self._good_board(cx, cy) for cx, cy in cells):
+                        for cx, cy in cells:
+                            self.grid()[cx][cy] = Tile()
+                        return k ** 3
+        self.grid()[self.x][self.y] = Tile()
+        return B.YIELD["BOARD"]
+
+    def swap(self, direction):
+        if direction not in DIRS:
+            raise ValueError("swap() needs a direction: North, East, South or West")
+        dx, dy = DIRS[direction]
+        nx, ny = self.x + dx, self.y + dy
+        n = self.size()
+        if not (0 <= nx < n and 0 <= ny < n):
+            return False
+        g = self.grid()
+        g[self.x][self.y], g[nx][ny] = g[nx][ny], g[self.x][self.y]
+        return True
+
+    def gpu_grid_sorted(self):
+        g, n = self.grid(), self.size()
+        if not all(g[x][y].part == "GPU" and self.is_ready(g[x][y]) for x in range(n) for y in range(n)):
+            return False
+        rows = all(g[x][y].score <= g[x + 1][y].score for y in range(n) for x in range(n - 1))
+        cols = all(g[x][y].score <= g[x][y + 1].score for x in range(n) for y in range(n - 1))
+        return rows and cols
+
+    # ---------------------------------------------------------------- lift + orders
+    def goto_floor(self, name):
+        if name not in self.floors:
+            return False
+        self.floor = name
+        self.x %= self.size()
+        self.y %= self.size()
+        return True
 
     def new_order(self):
-        # Filled in by Task 3
-        self.order = None
+        kinds = min(5, 2 + self.orders_done // 3)
+        parts = self.rng.sample(list(B.ORDER_BASE), kinds)
+        scale = 1 + self.orders_done // 4
+        self.order = {p: B.ORDER_BASE[p] * self.rng.randint(1, 2) * scale for p in parts}
+
+    def assemble(self):
+        if self.floor != "ASSEMBLY" or not self.order:
+            return False
+        if any(self.inventory[p] < n for p, n in self.order.items()):
+            return False
+        for p, n in self.order.items():
+            self.inventory[p] -= n
+        self.inventory["COMPUTER"] += 1
+        self.orders_done += 1
+        self.new_order()
+        return True
 
     # ---------------------------------------------------------------- saving
     def to_state(self):
