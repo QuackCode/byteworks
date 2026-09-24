@@ -38,7 +38,8 @@ def run_program(world, files, entry="main.py", pace=None, on_change=None, on_pri
     if problems:
         return {"ok": False, "stopped": False, "error": "\n".join(problems[:MAX_PROBLEMS])}
 
-    api = Api(world, pace, on_change, on_print, max_ticks, stats=_code_stats(files, user_modules))
+    user_files = {entry} | {f"{m}.py" for m in user_modules}
+    api = Api(world, pace, on_change, on_print, max_ticks, stats=_code_stats(files, user_modules), user_files=user_files)
     safe_builtins = {k: v for k, v in vars(builtins).items() if k not in FORBIDDEN}
     loaded = {}
 
@@ -60,7 +61,6 @@ def run_program(world, files, entry="main.py", pace=None, on_change=None, on_pri
     safe_builtins["print"] = api.print
     namespace = api.namespace()
     namespace.update(__builtins__=safe_builtins, __name__="__main__")
-    user_files = {entry} | {f"{m}.py" for m in user_modules}
     try:
         exec(compile(files[entry], entry, "exec"), namespace)
         api.stats.finished = True
@@ -71,5 +71,6 @@ def run_program(world, files, entry="main.py", pace=None, on_change=None, on_pri
     except Exception as exc:  # the player's program crashed: explain it kindly
         return {"ok": False, "stopped": False, "error": friendly_error(exc, user_files)}
     finally:
+        world.cursor = None           # nothing is running any more
         if on_change:
             on_change(0)

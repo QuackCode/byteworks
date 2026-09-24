@@ -179,7 +179,7 @@ export function App() {
         </section>
 
         <CodePanel files={files} active={save.active} windows={windows} editKey={editKey}
-          running={running} stopping={stopping} ready={status === "ready"} lines={lines}
+          running={running} stopping={stopping} ready={status === "ready"} lines={lines} cursor={world?.cursor ?? null}
           onEdit={(text) => persist({ files: { ...saveRef.current.files, [saveRef.current.active]: text } })}
           onSelect={(name) => { persist({ active: name }); setEditKey((k) => k + 1); }}
           onAdd={(name) => { persist({ files: { ...saveRef.current.files, [name]: `# ${name}\n` }, active: name }); setEditKey((k) => k + 1); }}

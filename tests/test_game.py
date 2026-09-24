@@ -643,5 +643,27 @@ class SkinTests(unittest.TestCase):
         self.assertTrue(all({"id", "name", "cost", "blurb"} <= set(d) for d in data))
 
 
+class RunningLineTests(unittest.TestCase):
+    def test_each_action_reports_the_line_that_called_it(self):
+        w = World()
+        seen = []
+        run_program(w, {"main.py": "harvest()\n\nmove(East)\nmove(North)\n"},
+                    on_change=lambda ms: seen.append(w.cursor))
+        self.assertEqual(seen[:3], [["main.py", 1], ["main.py", 3], ["main.py", 4]])
+        self.assertIsNone(w.cursor)                        # cleared when the program ends
+
+    def test_line_inside_a_function_in_another_window(self):
+        w = unlocked_world("all")
+        files = {"main.py": "import helpers\nhelpers.go()\n", "helpers.py": "def go():\n    move(East)\n"}
+        seen = []
+        run_program(w, files, on_change=lambda ms: seen.append(w.cursor))
+        self.assertEqual(seen[0], ["helpers.py", 2])
+
+    def test_cursor_is_not_saved(self):
+        w = World()
+        w.cursor = ["main.py", 3]
+        self.assertNotIn("cursor", w.to_state())
+
+
 if __name__ == "__main__":
     unittest.main()

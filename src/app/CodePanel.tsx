@@ -6,6 +6,7 @@ export interface ConsoleLine { text: string; kind: "out" | "err" | "info" }
 interface Props {
   files: Record<string, string>; active: string; windows: number; editKey: number;
   running: boolean; stopping: boolean; ready: boolean; lines: ConsoleLine[];
+  cursor: [string, number] | null;   // file + line the drone is carrying out right now
   onEdit: (text: string) => void; onSelect: (name: string) => void;
   onAdd: (name: string) => void; onRename: (from: string, to: string) => void; onDelete: (name: string) => void;
   onRun: () => void; onStop: () => void; onClear: () => void;
@@ -66,7 +67,10 @@ export function CodePanel(p: Props) {
       <div class="tabs" role="tablist">
         {names.map((name) => naming?.kind === "rename" && naming.from === name ? <span key={name}>{nameForm}</span> : (
           <div key={name} class={`tab ${name === p.active ? "active" : ""}`} role="tab" aria-selected={name === p.active}>
-            <button class="tab-name" onClick={() => p.onSelect(name)}>{name}</button>
+            <button class="tab-name" onClick={() => p.onSelect(name)}>
+              {p.cursor?.[0] === name && name !== p.active && <span class="tab-running" title="Running in this window">▶ </span>}
+              {name}
+            </button>
             {name !== "main.py" && name === p.active && !p.running && (
               <button class="tab-x" onClick={() => startNaming({ kind: "rename", from: name })} aria-label={`Rename ${name}`} title="Rename">✎</button>
             )}
@@ -80,7 +84,8 @@ export function CodePanel(p: Props) {
       </div>
       {nameProblem && <div class="hint-line">{nameProblem}</div>}
 
-      <Editor value={p.files[p.active]} docKey={`${p.active}:${p.editKey}`} onChange={p.onEdit} onRun={p.onRun} />
+      <Editor value={p.files[p.active]} docKey={`${p.active}:${p.editKey}`} onChange={p.onEdit} onRun={p.onRun}
+        runningLine={p.running && p.cursor?.[0] === p.active ? p.cursor[1] : null} />
 
       <div class="controls">
         {p.running

@@ -25,7 +25,9 @@ _last_print = 0.0
 
 
 def _state():
-    return json.dumps(WORLD.to_state())
+    state = WORLD.to_state()
+    state["cursor"] = WORLD.cursor      # which line is running (for the editor highlight)
+    return json.dumps(state)
 
 
 def _changed(anim_ms):

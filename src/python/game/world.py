@@ -53,6 +53,7 @@ class World:
         self.bumped = False   # True right after the drone walked into a wall (drawn as 💫)
         self.quests = set()   # ids of completed quests
         self.skins = {"classic"}   # drone skins owned (cosmetic)
+        self.cursor = None    # [file, line] of the code that made the latest action (not saved)
         self.open_floor("RAM")
 
     # ---------------------------------------------------------------- floors
@@ -299,6 +300,7 @@ class World:
         w.bumped = bool(state.get("bumped", False))
         w.quests = set(state.get("quests", []))
         w.skins = set(state.get("skins", [])) | {"classic"}
+        w.cursor = None
         if "ASSEMBLY" in w.floors and w.order is None:
             w.new_order()
         return w

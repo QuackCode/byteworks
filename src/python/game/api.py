@@ -1,5 +1,7 @@
 """The functions a player's program can call. Each action changes the world, adds game ticks,
 tells the screen to redraw, then waits in real time so the player can watch it happen."""
+import sys
+
 from . import balance as B
 from . import quests
 from .world import DIRS, FLOORS, PARTS, FaultyBoardError
@@ -22,8 +24,10 @@ class Floor:
 
 
 class Api:
-    def __init__(self, world, pace=None, on_change=None, on_print=None, max_ticks=None, stats=None):
+    def __init__(self, world, pace=None, on_change=None, on_print=None, max_ticks=None, stats=None,
+                 user_files=("main.py",)):
         self.world = world
+        self.user_files = set(user_files)
         self.stats = stats or quests.RunStats()
         self.pace = pace
         self.on_change = on_change
@@ -36,6 +40,7 @@ class Api:
         if action != "sense":
             self.world.bumped = bumped
         if action != "sense":
+            self.world.cursor = self._calling_line()
             self.check_quests()
         ms = ticks * B.MS_PER_TICK / B.SPEEDS[self.world.speed_level]
         if self.on_change and action != "sense":   # sensing changes nothing on screen
@@ -53,6 +58,15 @@ class Api:
     def _check(value, allowed, what):
         if value not in allowed:
             raise ValueError(f"{what} must be one of: {', '.join(allowed)}")
+
+    def _calling_line(self):
+        """[file, line] of the player's code that called this action (for highlighting it)."""
+        frame = sys._getframe(2)
+        while frame is not None:
+            if frame.f_code.co_filename in self.user_files:
+                return [frame.f_code.co_filename, frame.f_lineno]
+            frame = frame.f_back
+        return None
 
     def check_quests(self, final=False):
         for quest in quests.update(self.world, self.stats, final):
