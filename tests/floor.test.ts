@@ -26,3 +26,23 @@ describe("drone movement", () => {
   });
   it("puts North at the top", () => expect(svgRow(0, 3)).toBe(2));
 });
+
+import { nextHeading } from "../src/app/floorMath";
+
+describe("drone heading", () => {
+  const at = (x: number, y: number, floor = "RAM") => ({ floor, x, y });
+  it("faces the way it moved (0 = North, clockwise)", () => {
+    expect(nextHeading(at(0, 0), at(1, 0), 0)).toBe(90);
+    expect(nextHeading(at(1, 1), at(1, 0), 0)).toBe(180);
+    expect(nextHeading(at(1, 0), at(0, 0), 0)).toBe(-90);
+  });
+  it("turns the short way round", () => {
+    expect(nextHeading(at(1, 0), at(0, 0), 180)).toBe(270);   // West from South: +90, not -270
+    expect(nextHeading(at(0, 0), at(0, 1), 270)).toBe(360);   // then North: +90 again
+  });
+  it("keeps its heading when it didn't move or changed floor", () => {
+    expect(nextHeading(at(1, 1), at(1, 1), 90)).toBe(90);
+    expect(nextHeading(at(0, 0), at(0, 1, "CPU"), 90)).toBe(90);
+    expect(nextHeading(null, at(0, 0), 0)).toBe(0);
+  });
+});

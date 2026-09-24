@@ -118,20 +118,7 @@ code, pre { font-family: var(--mono); }
 .follow { font-weight: 400; font-size: 0.9rem; color: var(--muted); display: flex; gap: 6px; align-items: center; }
 .floor-btn.drone { outline: 2px dashed var(--accent); outline-offset: 1px; }
 .floor-svg { display: block; width: 100%; height: auto; max-height: 70vh; }
-.tile { fill: var(--panel-2); stroke: var(--line); stroke-width: 2; }
-.tile.ready { stroke: var(--floor); }
-.tile.faulty { fill: #4a1f24; stroke: var(--bad); }
-.tile-icon { font-size: 40px; }
-.tile-flag { font-size: 24px; }
-.tile-score { fill: #fff; font: 700 22px var(--mono); }
-.grow-bar { fill: var(--floor); }
 .drone { transition-property: transform; transition-timing-function: linear; }
-.drone-ring { fill: #0008; stroke: var(--accent); stroke-width: 4; }
-.drone-icon { font-size: 40px; }
-.drone-body.bumped { animation: bonk 0.35s ease-in-out 2; transform-box: fill-box; transform-origin: center; }
-.drone-body.bumped .drone-ring { stroke: var(--bad); }
-.drone-stun { font-size: 26px; }
-@keyframes bonk { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 .floor-locked { min-height: 280px; display: grid; place-content: center; text-align: center; gap: 6px; color: var(--muted); }
 .floor-locked-icon { font-size: 3rem; }
 .assembly { padding: 8px 12px; }
@@ -198,3 +185,30 @@ code, pre { font-family: var(--mono); }
 .drone-elsewhere { margin: 0 0 8px; padding: 6px 10px; border-radius: 8px; background: var(--panel-2); color: var(--muted); font-size: 0.9rem; }
 .drone-elsewhere code { color: #ffd98a; }
 .linkish { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; font: inherit; }
+
+/* ---- factory art ---- */
+.art-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+.part-icon { flex-shrink: 0; vertical-align: middle; }
+.inv { display: inline-flex; align-items: center; gap: 4px; }
+.cost, .order li, .computers, .floor-title { display: inline-flex; align-items: center; gap: 6px; }
+.tile { fill: url(#g-plate); stroke: #313849; stroke-width: 2; }
+.tile.ready { stroke: var(--floor); stroke-opacity: 0.55; }
+.tile.faulty { stroke: var(--bad); stroke-opacity: 1; }
+.tile-bolts circle { fill: #3a4152; }
+.grow-track { fill: #0009; }
+.grow-bar { fill: #5ce1ff; }
+.art-engrave { font: 700 6.5px system-ui, sans-serif; fill: #6f7885; letter-spacing: 0.5px; }
+.art-engrave.small { font-size: 4.2px; font-weight: 600; }
+.art-label { font: 700 4.4px system-ui, sans-serif; fill: #3a3f48; }
+.art-score { font: 700 12.5px var(--mono); }
+.art-fan.spin, .drone-rotor { transform-box: fill-box; transform-origin: center; animation: spin 1.4s linear infinite; }
+.drone-rotor { animation-duration: 0.16s; }
+.art-smoke { animation: smoke 2.2s ease-out infinite; }
+.drone-heading { transform-box: fill-box; transform-origin: center; transition: transform 0.18s ease-out; }
+.drone-hover { animation: hover 2.6s ease-in-out infinite; }
+.drone-art.stunned { animation: bonk 0.35s ease-in-out 2; }
+.drone-art.stunned .drone-rotor { animation-duration: 1.1s; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes hover { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1.6px); } }
+@keyframes smoke { from { transform: translateY(4px); opacity: 0.2; } 40% { opacity: 1; } to { transform: translateY(-6px); opacity: 0; } }
+@keyframes bonk { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }

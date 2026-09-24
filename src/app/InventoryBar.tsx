@@ -1,5 +1,6 @@
 import type { WorldState } from "../engine/types";
-import { FLOORS, PARTS_ORDER, PART_ICON } from "../floors";
+import { FLOORS, PARTS_ORDER } from "../floors";
+import { PartIcon } from "./art";
 
 const UNLOCK_FOR_PART: Record<string, string | null> = {
   ...Object.fromEntries(FLOORS.map((f) => [f.id, f.unlock])), COMPUTER: "floor_assembly",
@@ -12,7 +13,7 @@ export function InventoryBar({ world }: { world: WorldState | null }) {
   return (
     <div class="inventory" aria-label="Parts you have">
       {shown.map((p) => (
-        <span class="inv" key={p} title={p}>{PART_ICON[p]} <b>{(world.inventory[p] ?? 0).toLocaleString()}</b></span>
+        <span class="inv" key={p} title={p}><PartIcon part={p} size={24} label={p} /><b>{(world.inventory[p] ?? 0).toLocaleString()}</b></span>
       ))}
     </div>
   );

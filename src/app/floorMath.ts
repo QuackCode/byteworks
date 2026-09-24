@@ -22,3 +22,16 @@ export function moveDuration(prev: DronePos | null, next: DronePos, animMs: numb
 export function svgRow(y: number, size: number): number {
   return size - 1 - y;
 }
+
+/** The drone's new heading in degrees (0 = North, clockwise), turning the short way round.
+ *  Headings accumulate past 360 so the CSS rotation never spins the long way. */
+export function nextHeading(prev: DronePos | null, next: DronePos, heading: number): number {
+  if (!prev || prev.floor !== next.floor) return heading;
+  const dx = next.x - prev.x;
+  const dy = next.y - prev.y;
+  if (dx === 0 && dy === 0) return heading;
+  const target = (Math.atan2(dx, dy) * 180) / Math.PI;    // North = 0, East = 90
+  let delta = ((((target - heading) % 360) + 540) % 360) - 180;
+  if (delta === -180) delta = 180;                         // a U-turn goes clockwise
+  return heading + delta;
+}

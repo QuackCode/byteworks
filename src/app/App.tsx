@@ -7,6 +7,7 @@ import { FloorView } from "./FloorView";
 import { InventoryBar } from "./InventoryBar";
 import { CodePanel, type ConsoleLine } from "./CodePanel";
 import { SaveDialog } from "./SaveDialog";
+import { ArtDefs, PartIcon } from "./art";
 import { UpgradePanel } from "./UpgradePanel";
 import { HelpPanel } from "./HelpPanel";
 
@@ -117,6 +118,7 @@ export function App() {
   const files = save.files;
   return (
     <div class="app">
+      <ArtDefs />
       <header class="topbar">
         <div class="brand">🏭 <span>ByteWorks</span></div>
         <InventoryBar world={world} />
@@ -143,7 +145,7 @@ export function App() {
           </nav>
           <div class="floor-frame" style={{ "--floor": floor.color }}>
             <div class="floor-head">
-              <span>{floor.icon} {floor.name}</span>
+              <span class="floor-title"><PartIcon part={floor.id === "ASSEMBLY" ? "COMPUTER" : floor.id} size={26} /> {floor.name}</span>
               <label class="follow">
                 <input type="checkbox" checked={save.settings.follow}
                   onChange={(e) => persist({ settings: { ...saveRef.current.settings, follow: (e.target as HTMLInputElement).checked } })} />

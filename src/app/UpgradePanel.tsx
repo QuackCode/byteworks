@@ -1,6 +1,6 @@
 import { useState } from "preact/hooks";
 import type { BuyResult, UnlockInfo, WorldState } from "../engine/types";
-import { PART_ICON } from "../floors";
+import { PartIcon } from "./art";
 
 interface Props {
   tree: UnlockInfo[]; world: WorldState; running: boolean;
@@ -37,7 +37,7 @@ export function UpgradePanel({ tree, world, running, onBuy, onHelp, onClose }: P
       <div class="upgrade-summary">{u.summary}</div>
       <div class="upgrade-cost">
         {Object.entries(u.cost).map(([p, n]) => (
-          <span key={p} class={`cost ${(world.inventory[p] ?? 0) >= n ? "ok" : ""}`}>{PART_ICON[p]} {n}</span>
+          <span key={p} class={`cost ${(world.inventory[p] ?? 0) >= n ? "ok" : ""}`}><PartIcon part={p} size={18} label={p} /> {n}</span>
         ))}
       </div>
       {state === "ready" && (

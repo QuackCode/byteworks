@@ -1,7 +1,8 @@
 import { useRef } from "preact/hooks";
 import type { WorldState } from "../engine/types";
-import { PART_ICON, WIN_COMPUTERS, type FloorInfo } from "../floors";
-import { lookOf, moveDuration, svgRow, type DronePos } from "./floorMath";
+import { WIN_COMPUTERS, type FloorInfo } from "../floors";
+import { lookOf, moveDuration, nextHeading, svgRow, type DronePos } from "./floorMath";
+import { Drone, PartArt, PartIcon, ScoreBadge } from "./art";
 
 const CELL = 100;
 
@@ -9,6 +10,7 @@ interface Props { floor: FloorInfo; world: WorldState; animMs: number; locked: b
 
 export function FloorView({ floor, world, animMs, locked, lockedBy }: Props) {
   const prev = useRef<DronePos | null>(null);
+  const heading = useRef(0);
   const state = world.floors[floor.id];
   if (locked || !state) {
     return (
@@ -24,6 +26,7 @@ export function FloorView({ floor, world, animMs, locked, lockedBy }: Props) {
   const n = state.size;
   const pos = { floor: world.floor, x: world.x, y: world.y };
   const duration = moveDuration(prev.current, pos, animMs);
+  heading.current = nextHeading(prev.current, pos, heading.current);
   prev.current = pos;
 
   return (
@@ -33,21 +36,24 @@ export function FloorView({ floor, world, animMs, locked, lockedBy }: Props) {
         const look = lookOf(tile, world.clock);
         return (
           <g key={`${x}-${y}`} transform={`translate(${x * CELL} ${svgRow(y, n) * CELL})`}>
-            <rect x="4" y="4" width="92" height="92" rx="10" class={`tile${look.ready ? " ready" : ""}${look.faulty ? " faulty" : ""}`} />
-            {look.part && <text x="50" y="62" text-anchor="middle" class="tile-icon" opacity={look.ready ? 1 : 0.4}>{PART_ICON[look.part]}</text>}
-            {look.part && !look.ready && <rect x="14" y="80" width={72 * look.progress} height="7" rx="3" class="grow-bar" />}
-            {look.faulty && <text x="74" y="32" class="tile-flag">⚠️</text>}
-            {look.score !== null && <text x="84" y="28" text-anchor="middle" class="tile-score">{look.score}</text>}
+            <rect x="3" y="3" width="94" height="94" rx="9" class={`tile${look.ready ? " ready" : ""}${look.faulty ? " faulty" : ""}`} />
+            <g class="tile-bolts">
+              <circle cx="11" cy="11" r="1.6" /><circle cx="89" cy="11" r="1.6" /><circle cx="11" cy="89" r="1.6" /><circle cx="89" cy="89" r="1.6" />
+            </g>
+            {look.part && <PartArt part={look.part} faulty={look.faulty} ready={look.ready} />}
+            {look.part && !look.ready && (
+              <g>
+                <rect x="16" y="85" width="68" height="4" rx="2" class="grow-track" />
+                <rect x="16" y="85" width={68 * look.progress} height="4" rx="2" class="grow-bar" />
+              </g>
+            )}
+            {look.score !== null && <ScoreBadge score={look.score} />}
           </g>
         );
       }))}
       {world.floor === floor.id && (
         <g class="drone" style={{ transform: `translate(${world.x * CELL}px, ${svgRow(world.y, n) * CELL}px)`, transitionDuration: `${duration}ms` }}>
-          <g class={world.bumped ? "drone-body bumped" : "drone-body"}>
-            <circle cx="50" cy="50" r="36" class="drone-ring" />
-            <text x="50" y="64" text-anchor="middle" class="drone-icon">🤖</text>
-            {world.bumped && <text x="50" y="16" text-anchor="middle" class="drone-stun">💫</text>}
-          </g>
+          <Drone facing={heading.current} stunned={!!world.bumped} />
         </g>
       )}
     </svg>
@@ -58,15 +64,15 @@ function AssemblyView({ world }: { world: WorldState }) {
   const computers = world.orders_done;  // spending computers on upgrades must not lower this
   return (
     <div class="assembly">
-      <p class="assembly-drone">{world.floor === "ASSEMBLY" ? "🤖 The drone is at the assembly bench." : "The drone is on another floor."}</p>
+      {world.floor === "ASSEMBLY" && <p class="assembly-drone">The drone is at the assembly bench.</p>}
       <h3>Order #{world.orders_done + 1}</h3>
       <ul class="order">
         {Object.entries(world.order ?? {}).map(([part, need]) => {
           const have = world.inventory[part] ?? 0;
-          return <li key={part} class={have >= need ? "ok" : ""}>{PART_ICON[part]} {part}: {have} / {need}</li>;
+          return <li key={part} class={have >= need ? "ok" : ""}><PartIcon part={part} size={26} /> {part}: {have} / {need}</li>;
         })}
       </ul>
-      <p class="computers">🖥️ Computers built: <strong>{computers}</strong> / {WIN_COMPUTERS}</p>
+      <p class="computers"><PartIcon part="COMPUTER" size={30} /> Computers built: <strong>{computers}</strong> / {WIN_COMPUTERS}</p>
       {computers >= WIN_COMPUTERS && <p class="win">🏆 ByteWorks is back in business! Keep going for fun.</p>}
     </div>
   );
