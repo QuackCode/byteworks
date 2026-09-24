@@ -1,0 +1,14 @@
+{
+  "day": 22,
+  "title": "The Catalogue Reader",
+  "topic": "Web scraping with requests and BeautifulSoup",
+  "floor": 5,
+  "machine": "Catalogue Reader",
+  "briefing": "Floor 5: graphics cards! We buy GPU chips from ChipCo, but they only publish prices on their website, with no spreadsheet and no API. Somebody copies the prices out by hand every morning. Let's automate it: download the page and scrape the prices straight out of the HTML.",
+  "hints": [
+    "requests.get(url) downloads the page and .text is the HTML. BeautifulSoup(resp.text, \"html.parser\") turns it into something you can search. soup.find(\"h1\").text gets the heading's text.",
+    "soup.find_all(\"tr\", class_=\"chip\") gives every chip row (note the underscore in class_). Inside a row, row.find(\"td\", class_=\"price\").text gets the price text, like \"£412.50\", so strip the £ and use float().",
+    "resp = requests.get(\"https://chipco.example/gpus\") / soup = BeautifulSoup(resp.text, \"html.parser\") / heading = soup.find(\"h1\").text / rows = soup.find_all(\"tr\", class_=\"chip\") / prices = {row.find(\"td\", class_=\"name\").text: float(row.find(\"td\", class_=\"price\").text.replace(\"£\", \"\")) for row in rows} / in_stock = [row.find(\"td\", class_=\"name\").text for row in rows if row.find(\"td\", class_=\"stock\").text == \"In stock\"] / cheapest = min(in_stock, key=lambda n: prices[n])"
+  ],
+  "bonus": "The page has a 'Next page' link. Find it with soup.find(\"a\")[\"href\"], then download and scrape page 2 as well."
+}

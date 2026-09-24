@@ -73,3 +73,59 @@ class Pip:
 
     def __repr__(self):
         return "<pip: try pip.install('name'), pip.list(), pip.freeze()>"
+
+
+class Env:
+    """One isolated virtual environment with its own installed packages."""
+
+    def __init__(self, name):
+        self.name = name
+        self.installed = {}
+
+    def install(self, spec):
+        name, _, version = spec.partition("==")
+        name = name.strip().lower()
+        if name not in CATALOGUE:
+            raise FactoryError(f"There's no package called {name!r}. The Parts Installer knows: {', '.join(CATALOGUE)}")
+        versions = CATALOGUE[name]["versions"]
+        version = version.strip() or versions[-1]
+        if version not in versions:
+            raise FactoryError(f"{name} has no version {version}. Available: {', '.join(versions)}")
+        self.installed[name] = version
+        print(f"({self.name}) Successfully installed {name}-{version}")
+
+    def freeze(self):
+        return "".join(f"{n}=={v}\n" for n, v in sorted(self.installed.items()))
+
+    def __repr__(self):
+        return f"<venv {self.name}: {self.installed}>"
+
+
+class VenvManager:
+    def __init__(self):
+        self.envs = {}
+        self.active = None
+        for name in CATALOGUE:
+            sys.modules.pop(name, None)
+
+    def create(self, name):
+        if name in self.envs:
+            raise FactoryError(f"A virtual environment called {name!r} already exists.")
+        self.envs[name] = Env(name)
+        print(f"Created virtual environment: {name}/")
+        return self.envs[name]
+
+    def activate(self, name):
+        if name not in self.envs:
+            raise FactoryError(f"There's no environment called {name!r}. Create it first with venv.create({name!r}).")
+        for pkg in CATALOGUE:
+            sys.modules.pop(pkg, None)
+        for pkg, version in self.envs[name].installed.items():
+            sys.modules[pkg] = CATALOGUE[pkg]["build"](version)
+        self.active = name
+        print(f"({name}) activated")
+
+    def deactivate(self):
+        for pkg in CATALOGUE:
+            sys.modules.pop(pkg, None)
+        self.active = None

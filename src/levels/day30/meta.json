@@ -1,0 +1,14 @@
+{
+  "day": 30,
+  "title": "The Final Assembly",
+  "topic": "Everything together: the boss level",
+  "floor": 7,
+  "machine": "Assembly Robot",
+  "briefing": "This is it, rookie: the top floor. Every floor you've rebuilt now sends parts up here, and real customer orders are waiting. But the warehouse is a mess: faulty CPUs, wrong-spec RAM, dead SSDs, exploding motherboards and weak GPUs, all mixed in with the good stuff. Use EVERYTHING you've learned to build every order perfectly. Ship them all, and ByteWorks is truly back in business. Good luck!",
+  "hints": [
+    "fetch_good needs a while True loop: fetch a part, return it if is_good(part) is True, otherwise warehouse.scrap(part) and loop again. is_good is a FUNCTION passed in, so call it like is_good(part).",
+    "board_ok: try tester.install(board) and return True, with except (ValueError, KeyError): return False. For the CPU test, look at order[\"type\"]: GAMING needs grade(c) == \"GAMING\", while OFFICE accepts anything except \"REJECT\". A lambda can use order from the loop.",
+    "while True: part = warehouse.fetch(kind); if is_good(part): return part; warehouse.scrap(part) / cpu_ok = lambda c: grade(c) == \"GAMING\" if order[\"type\"] == \"GAMING\" else grade(c) != \"REJECT\" / ssd: lambda s: s[\"health\"] >= 20 / gpu: min_score = 8000 if order[\"type\"] == \"GAMING\" else 5000, then lambda g: g[\"score\"] >= min_score / computers.append({\"order\": order[\"id\"], \"cpu\": cpu[\"serial\"], ...}) / json.dump(computers, f)"
+  ],
+  "bonus": "Turn the whole thing into a class AssemblyLine with a build(order) method, and keep a running count of how many parts of each kind were scrapped in a dict. Which floor has the worst quality?"
+}

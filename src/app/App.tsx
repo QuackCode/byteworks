@@ -4,7 +4,7 @@ import { LEVELS } from "../levels";
 import { runner, type RunnerStatus } from "../engine/runner";
 import type { CheckResult } from "../engine/events";
 import { loadSave, storeSave, type Save } from "../engine/save";
-import { daysOnFloor, isDayUnlocked, isFloorUnlocked, nextDay } from "../engine/progress";
+import { daysOnFloor, isDayUnlocked, isFloorComplete, isFloorUnlocked, nextDay } from "../engine/progress";
 import { FloorView } from "./FloorView";
 import { Lesson } from "./Lesson";
 import { Workbench } from "./Workbench";
@@ -12,6 +12,10 @@ import { SaveDialog } from "./SaveDialog";
 
 // Only floors that have levels so far are part of the building.
 const BUILT_FLOORS = FLOORS.filter((f) => daysOnFloor(LEVELS, f.id).length > 0);
+// The part floors that feed Final Assembly (floor 7)
+const PART_FLOORS = [
+  { id: 1, name: "RAM" }, { id: 2, name: "CPU" }, { id: 3, name: "SSD" }, { id: 4, name: "Board" }, { id: 5, name: "GPU" },
+];
 
 function isTyping(el: EventTarget | null) {
   const node = el as HTMLElement | null;
@@ -46,10 +50,15 @@ export function App() {
     storeSave(next);
   };
 
+  // A ref, so quick repeated key presses always move from the floor we're really on
+  const floorIndexRef = useRef(floorIndex);
+  floorIndexRef.current = floorIndex;
+
   const goFloor = (index: number) => {
     const target = BUILT_FLOORS[index];
-    if (!target || target.id === floor.id) return;
-    setSlide(index > floorIndex ? "up" : "down");
+    if (!target || index === floorIndexRef.current) return;
+    setSlide(index > floorIndexRef.current ? "up" : "down");
+    floorIndexRef.current = index;
     setFloorId(target.id);
     // Jump to the next unfinished day on that floor (or its last day)
     const days = daysOnFloor(LEVELS, target.id);
@@ -66,8 +75,8 @@ export function App() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (isTyping(e.target) || showSave) return;
-      if (e.key === "ArrowUp") { e.preventDefault(); goFloor(floorIndex + 1); }
-      if (e.key === "ArrowDown") { e.preventDefault(); goFloor(floorIndex - 1); }
+      if (e.key === "ArrowUp") { e.preventDefault(); goFloor(floorIndexRef.current + 1); }
+      if (e.key === "ArrowDown") { e.preventDefault(); goFloor(floorIndexRef.current - 1); }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -171,7 +180,12 @@ export function App() {
           <FloorView floor={floor} days={floorDays} completed={save.completed} unlockedDays={unlockedDays}
             currentDay={day} locked={floorLocked} lockedHint={`Finish Day ${firstDayOnFloor - 1} to open this floor`}
             events={result && level.floor === floor.id ? result.events : []} runId={level.floor === floor.id ? runId : 0}
-            onSelectDay={selectDay} />
+            onSelectDay={selectDay}
+            incoming={floor.id === 7 ? PART_FLOORS.map((pf) => ({
+              name: pf.name,
+              icon: FLOORS[pf.id].icon,
+              ready: isFloorComplete(LEVELS, pf.id, save.completed),
+            })) : undefined} />
         </div>
       </section>
 

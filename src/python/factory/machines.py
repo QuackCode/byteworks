@@ -66,3 +66,50 @@ class BoardTester:
         bios = board["bios"]  # KeyError if the BIOS chip is missing
         self.installed.append(board["serial"])
         return f"{board['serial']} installed (BIOS {bios})"
+
+
+GOOD_RAM = (32, 5600)
+
+
+class Warehouse:
+    """Hands out parts from every floor. Around a third of them are faulty in some way."""
+
+    KINDS = ("cpu", "ram", "ssd", "motherboard", "gpu")
+    MAX_FETCHES = 300
+
+    def __init__(self, world):
+        self.world = world
+        self.registry = {}   # serial -> (kind, original part)
+        self.fetches = 0
+        self.scrapped = []
+
+    def _make(self, kind):
+        w, rng = self.world, self.world.rng
+        bad = rng.random() < 0.35
+        if kind == "cpu":
+            return make_cpu(w, dead=bad and rng.random() < 0.5, hot=bad and rng.random() < 0.5)
+        if kind == "ram":
+            spec = rng.choice([(16, 4800), (31, 5600), (32, 4800)]) if bad else GOOD_RAM
+            return {"serial": w.serial("RAM"), "spec": spec}
+        if kind == "ssd":
+            return make_ssd(w, dead=bad)
+        if kind == "motherboard":
+            return make_board(w, fault=rng.choice(["blown", "no_bios"]) if bad else None)
+        score = round(rng.uniform(1500, 4999), 0) if bad else round(rng.uniform(5000, 12000), 0)
+        return {"serial": w.serial("GPU"), "score": score}
+
+    def fetch(self, kind):
+        if kind not in self.KINDS:
+            raise FactoryError(f"The warehouse has no {kind!r}. Try one of: {', '.join(self.KINDS)}")
+        self.fetches += 1
+        if self.fetches > self.MAX_FETCHES:
+            raise FactoryError("The warehouse is empty! Is a loop fetching parts forever? Check your tests return True for good parts.")
+        part = self._make(kind)
+        self.registry[part["serial"]] = (kind, dict(part))
+        return dict(part)
+
+    def scrap(self, part):
+        self.scrapped.append(part["serial"])
+
+    def __repr__(self):
+        return f"<warehouse: {self.fetches} parts fetched, {len(self.scrapped)} scrapped>"

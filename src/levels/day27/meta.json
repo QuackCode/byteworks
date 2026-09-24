@@ -1,0 +1,14 @@
+{
+  "day": 27,
+  "title": "The Order Database",
+  "topic": "Databases with MongoDB (pymongo)",
+  "floor": 6,
+  "machine": "Order Database",
+  "briefing": "The website is taking orders, but they're vanishing every time the server restarts! Orders need to live in a database. We're using MongoDB, which stores each order as a document that looks just like a Python dict. Add new orders, find the pending ones, ship some, and cancel one.",
+  "hints": [
+    "client = MongoClient(\"mongodb://localhost:27017\"), then db = client[\"byteworks\"] and orders = db[\"orders\"]. insert_one takes a dict and insert_many takes a list of dicts.",
+    "find({\"status\": \"pending\"}) returns the matching documents (wrap it in list()). count_documents works the same way. Updates need $set: update_one({\"order_id\": 3}, {\"$set\": {\"status\": \"shipped\"}}). Operators like {\"$gte\": 1000} compare values.",
+    "orders.insert_one(new_order) / orders.insert_many(more_orders) / pending = list(orders.find({\"status\": \"pending\"})) / big_spenders = list(orders.find({\"price\": {\"$gte\": 1000}})) / orders.update_one({\"order_id\": ship_id}, {\"$set\": {\"status\": \"shipped\"}}) / orders.delete_one({\"order_id\": cancel_id}) / pending_count = orders.count_documents({\"status\": \"pending\"})"
+  ],
+  "bonus": "Use update_many with {\"$inc\": {\"price\": 10}} to add a £10 delivery charge to every pending order."
+}

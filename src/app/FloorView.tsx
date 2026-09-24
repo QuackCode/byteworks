@@ -14,6 +14,8 @@ interface Props {
   events: FactoryEvent[];
   runId: number;
   onSelectDay: (day: number) => void;
+  /** Final Assembly only: which part floors are finished and sending parts upstairs */
+  incoming?: { icon: string; name: string; ready: boolean }[];
 }
 
 type Result = "ship" | "reject" | "crash";
@@ -170,6 +172,21 @@ export function FloorView(p: Props) {
           </g>
         );
       })}
+
+      {/* Final Assembly: parts arriving by lift from the floors below */}
+      {p.incoming && (
+        <g transform="translate(480 92)">
+          <text x="0" y="-8" class="machine-day">PARTS ARRIVING BY LIFT</text>
+          {p.incoming.map((f, i) => (
+            <g key={f.name} transform={`translate(${i * 96} 0)`} opacity={f.ready ? 1 : 0.35}>
+              <rect width="86" height="84" rx="8" class="machine-body" />
+              <text x="43" y="36" text-anchor="middle" font-size="26">{f.icon}</text>
+              <text x="43" y="60" text-anchor="middle" class="machine-state">{f.name}</text>
+              <text x="43" y="76" text-anchor="middle" class="machine-day">{f.ready ? "✓ ready" : "waiting"}</text>
+            </g>
+          ))}
+        </g>
+      )}
 
       {/* Conveyor belt */}
       <rect x={BELT_START - 14} y={BELT_Y - 13} width={BELT_END - BELT_START + 34} height="26" rx="13"

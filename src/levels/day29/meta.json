@@ -1,0 +1,14 @@
+{
+  "day": 29,
+  "title": "The Factory API",
+  "topic": "Building a REST API with Flask (CRUD)",
+  "floor": 6,
+  "machine": "Factory API",
+  "briefing": "Big news: a chain of computer shops wants to order from us automatically, so their system needs to talk to ours. Time to build ByteWorks' own API. Other programs will create orders, read them, update them and cancel them, all through web addresses that speak JSON.",
+  "hints": [
+    "Use @app.route(\"/orders\", methods=[\"POST\"]) to pick the HTTP method. request.json is the data the caller sent. Return jsonify(order), 201 for 'Created'.",
+    "Routes can use <int:order_id> to get a number. If order_id not in orders, return jsonify({\"error\": \"not found\"}), 404. For a new id, use max(orders, default=0) + 1.",
+    "GET /orders: return jsonify(list(orders.values())) / POST /orders: new_id = max(orders, default=0) + 1; order = {\"id\": new_id, \"model\": request.json[\"model\"], \"status\": \"pending\"}; orders[new_id] = order; return jsonify(order), 201 / GET, PUT and DELETE /orders/<int:order_id>: check that it exists (404 if not), then return it / orders[order_id][\"status\"] = request.json[\"status\"] / del orders[order_id] and return jsonify({\"deleted\": order_id})"
+  ],
+  "bonus": "Make POST /orders return 400 with an error message if the JSON is missing \"model\"."
+}

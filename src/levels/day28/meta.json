@@ -1,0 +1,14 @@
+{
+  "day": 28,
+  "title": "The Courier Link",
+  "topic": "Using APIs: HTTP methods, JSON and status codes",
+  "floor": 6,
+  "machine": "Courier Link",
+  "briefing": "Orders are stored, now they need delivering. SwiftShip, our courier, has an API: a website made for programs instead of people. It speaks JSON. Get delivery quotes, pick the cheapest one that's fast enough, book it, and check on a parcel that's gone missing.",
+  "hints": [
+    "requests.get(url, params={\"weight_kg\": weight_kg}) adds ?weight_kg=... to the address. resp.status_code tells you whether it worked (200 means OK), and resp.json() turns the JSON into Python lists and dicts.",
+    "Filter the quotes with a comprehension (days <= 2), then min(..., key=lambda q: q[\"price\"]). requests.post(url, json={...}) sends data. A 404 status means not found, so check the status before calling .json().",
+    "resp = requests.get(RATES_URL, params={\"weight_kg\": weight_kg}) / quotes = resp.json() / fast = [q for q in quotes if q[\"days\"] <= 2] / best = min(fast, key=lambda q: q[\"price\"]) / booking = requests.post(BOOK_URL, json={\"service\": best[\"service\"], \"weight_kg\": weight_kg}) / tracking = booking.json()[\"tracking\"] / lost = requests.get(TRACK_URL + lost_parcel) / parcel_status = lost.json()[\"status\"] if lost.status_code == 200 else \"not found\""
+  ],
+  "bonus": "Loop over several weights (1, 5, 20 kg) and print the cheapest quote for each one."
+}

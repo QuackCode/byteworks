@@ -20,10 +20,14 @@ async function init(files: Record<string, string>) {
   checker = py.pyimport("factory.checker");
 }
 
+// These are simulated by the factory (no internet server or database in a browser),
+// so never download the real packages for them.
+const SIMULATED = /^\s*(import|from)\s+(requests|flask|pymongo)\b.*$/gm;
+
 async function prepare(source: string) {
   // Downloads numpy/pandas etc. the first time a level imports them.
   try {
-    await py.loadPackagesFromImports(source);
+    await py.loadPackagesFromImports(source.replace(SIMULATED, ""));
   } catch {
     /* a syntax error in the player's code: the checker will explain it */
   }

@@ -1,0 +1,14 @@
+{
+  "day": 24,
+  "title": "The Benchmark Lab",
+  "topic": "Statistics with NumPy",
+  "floor": 5,
+  "machine": "Benchmark Lab",
+  "briefing": "Every GPU gets benchmarked before it ships, and today's batch is hundreds of cards. Head office wants the average, the spread, how many fell below the minimum score of 5000, and a neat 0-to-1 rating for the sticker on each box. Loops would work, but NumPy does it all in one go.",
+  "hints": [
+    "import numpy as np, then arr = np.array(scores). Arrays have .mean(), .std(), .min() and .max(), and np.median(arr) gives the median.",
+    "arr < 5000 gives an array of True/False values, and .sum() counts the Trues. arr[arr >= 9000] keeps only the elite scores. Maths on arrays happens to every item at once: (arr - arr.min()) / (arr.max() - arr.min()).",
+    "arr = np.array(scores) / mean = arr.mean() / median = np.median(arr) / spread = arr.std() / failures = int((arr < 5000).sum()) / elite = arr[arr >= 9000] / rating = (arr - arr.min()) / (arr.max() - arr.min()) / grid = arr[:12].reshape(3, 4) / row_means = grid.mean(axis=1)"
+  ],
+  "bonus": "Python's built-in statistics module can do mean, median and mode too. Compare statistics.mean(scores) with arr.mean(). Then try np.percentile(arr, 90)."
+}
