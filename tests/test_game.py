@@ -287,5 +287,125 @@ class GatingTests(unittest.TestCase):
         self.assertIn("SyntaxError", problems[0])
 
 
+from game.runner import run_program  # noqa: E402
+from game.sandbox import run_snippet  # noqa: E402
+from game import unlocks as U2  # noqa: E402
+
+
+def with_prereqs(ids):
+    wanted = set()
+    todo = [u.id for u in U2.UNLOCKS] if "all" in ids else list(ids)
+    while todo:
+        uid = todo.pop()
+        if uid not in wanted:
+            wanted.add(uid)
+            todo.extend(U2.BY_ID[uid].requires)
+    return wanted
+
+
+def unlocked_world(*ids, **inventory):
+    """A world that owns the given unlocks (plus everything they require), with an empty inventory."""
+    w = World(seed=5)
+    w.inventory.update({p: 10**6 for p in w.inventory})
+    wanted = with_prereqs(ids)
+    for uid in [u.id for u in U2.UNLOCKS]:   # list order is a valid buying order
+        if uid in wanted:
+            assert U2.buy(w, uid)[0], uid
+    w.inventory.update({p: 0 for p in w.inventory})
+    w.inventory.update(inventory)
+    return w
+
+
+class RunnerTests(unittest.TestCase):
+    def test_start_program_harvests_and_spends_ticks(self):
+        w = World()
+        r = run_program(w, {"main.py": "harvest()\nmove(East)\nharvest()\n"})
+        self.assertEqual(r, {"ok": True, "stopped": False})
+        self.assertEqual(w.inventory["RAM"], 2)
+        self.assertEqual(w.clock, 2 * B.ACTION_TICKS["harvest"] + B.ACTION_TICKS["move"])
+
+    def test_locked_feature_does_not_run(self):
+        w = World()
+        r = run_program(w, {"main.py": "harvest()\nwhile True:\n    harvest()\n"})
+        self.assertFalse(r["ok"])
+        self.assertIn("Line 2", r["error"])
+        self.assertEqual(w.clock, 0)
+
+    def test_print_goes_to_console_hook(self):
+        out = []
+        run_program(World(), {"main.py": "print('hello', 'drone')\n"}, on_print=out.append)
+        self.assertEqual(out, ["hello drone"])
+
+    def test_tick_budget_stops_forever_loop(self):
+        w = unlocked_world("loops")
+        r = run_program(w, {"main.py": "while True:\n    harvest()\n    move(North)\n"}, max_ticks=5000)
+        self.assertEqual(r, {"ok": True, "stopped": True})
+        self.assertGreater(w.inventory["RAM"], 0)
+        self.assertGreaterEqual(w.clock, 5000)
+
+    def test_stop_cannot_be_caught_by_except_exception(self):
+        w = unlocked_world("all")
+        code = "while True:\n    try:\n        harvest()\n    except Exception:\n        pass\n"
+        self.assertTrue(run_program(w, {"main.py": code}, max_ticks=2000)["stopped"])
+
+    def test_keyboard_interrupt_from_pace_means_stopped(self):
+        def pace(ms):
+            raise KeyboardInterrupt
+        r = run_program(unlocked_world("loops"), {"main.py": "while True:\n    harvest()\n"}, pace=pace)
+        self.assertEqual(r, {"ok": True, "stopped": True})
+
+    def test_hooks_get_real_time_scaled_by_speed(self):
+        w = unlocked_world("loops", "speed1")
+        paced, changed = [], []
+        run_program(w, {"main.py": "harvest()\n"}, pace=paced.append, on_change=changed.append)
+        want = B.ACTION_TICKS["harvest"] * B.MS_PER_TICK / B.SPEEDS[1]
+        self.assertEqual(paced, [want])
+        self.assertEqual(changed, [want, 0])
+
+    def test_uncaught_faulty_board_is_friendly(self):
+        w = unlocked_world("floor_board")
+        w.goto_floor("BOARD")
+        w.grid()[0][0] = Tile("BOARD", 0, True, None, 0)
+        r = run_program(w, {"main.py": "move(East)\nmove(West)\nharvest()\n"})
+        self.assertFalse(r["ok"])
+        self.assertTrue(r["error"].startswith("Line 3: FaultyBoardError"), r["error"])
+        self.assertIn("is_faulty()", r["error"])
+
+    def test_faulty_board_can_be_caught(self):
+        w = unlocked_world("all")
+        w.goto_floor("BOARD")
+        w.grid()[0][0] = Tile("BOARD", 0, True, None, 0)
+        code = "try:\n    harvest()\nexcept FaultyBoardError:\n    print('caught')\n"
+        out = []
+        self.assertTrue(run_program(w, {"main.py": code}, on_print=out.append)["ok"])
+        self.assertEqual(out, ["caught"])
+
+    def test_import_own_file(self):
+        w = unlocked_world("all")
+        files = {"main.py": "import helpers\nhelpers.sweep(2)\n",
+                 "helpers.py": "def sweep(n):\n    for i in range(n):\n        harvest()\n        move(North)\n"}
+        self.assertTrue(run_program(w, files)["ok"])
+        self.assertEqual(w.inventory["RAM"], 2)
+
+    def test_locked_feature_in_imported_file(self):
+        w = unlocked_world("modules")   # modules + prerequisites, but NOT exceptions
+        files = {"main.py": "import helpers\n", "helpers.py": "x = 1\ntry:\n    harvest()\nexcept Exception:\n    pass\n"}
+        r = run_program(w, files)
+        self.assertFalse(r["ok"])
+        self.assertIn("helpers.py line 2", r["error"])
+        self.assertEqual(w.clock, 0)
+
+    def test_bad_arguments_are_explained(self):
+        r = run_program(World(), {"main.py": "move('Up')\n"})
+        self.assertIn("Line 1: ValueError", r["error"])
+        self.assertIn("North, East, South or West", r["error"])
+
+
+class SandboxTests(unittest.TestCase):
+    def test_snippet_output_and_errors(self):
+        self.assertEqual(run_snippet("print(1 + 2)"), {"stdout": "3\n", "error": None})
+        self.assertTrue(run_snippet("print(nope)")["error"].startswith("Line 1: NameError"))
+
+
 if __name__ == "__main__":
     unittest.main()
