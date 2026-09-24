@@ -3,12 +3,13 @@ import { decodeSave, encodeSave, type Save } from "../engine/save";
 
 interface Props {
   save: Save;
+  running: boolean;
   onLoad: (save: Save) => void;
   onResetAll: () => void;
   onClose: () => void;
 }
 
-export function SaveDialog({ save, onLoad, onResetAll, onClose }: Props) {
+export function SaveDialog({ save, running, onLoad, onResetAll, onClose }: Props) {
   const [importText, setImportText] = useState("");
   const [msg, setMsg] = useState("");
   const [confirmWipe, setConfirmWipe] = useState(false);
@@ -27,7 +28,7 @@ export function SaveDialog({ save, onLoad, onResetAll, onClose }: Props) {
     const loaded = decodeSave(importText);
     if (!loaded) return setMsg("That save code doesn't look right. Make sure you copied all of it.");
     onLoad(loaded);
-    setMsg(`Loaded! ${loaded.completed.length} shifts complete.`);
+    setMsg("Loaded! Your factory is back.");
   };
 
   return (
@@ -35,14 +36,15 @@ export function SaveDialog({ save, onLoad, onResetAll, onClose }: Props) {
       <div class="modal panel" role="dialog" aria-modal="true" aria-labelledby="save-title">
         <h2 id="save-title">💾 Your save</h2>
         <p>Progress saves automatically in this browser. To carry on from another computer, copy your save code and load it there.</p>
+        {running && <p class="modal-msg">Stop your program first to load or reset a save.</p>}
         <label class="field-label">Your save code</label>
         <textarea readOnly rows={3} value={code} onFocus={(e) => (e.target as HTMLTextAreaElement).select()} />
         <button class="btn primary small" onClick={copy}>Copy save code</button>
 
         <label class="field-label">Load a save code</label>
-        <textarea rows={3} placeholder="Paste a code starting with BW1." value={importText}
+        <textarea rows={3} placeholder="Paste a code starting with BW2." value={importText}
           onInput={(e) => setImportText((e.target as HTMLTextAreaElement).value)} />
-        <button class="btn small" onClick={load} disabled={!importText.trim()}>Load save</button>
+        <button class="btn small" onClick={load} disabled={running || !importText.trim()}>Load save</button>
 
         {msg && <p class="modal-msg" role="status">{msg}</p>}
 
@@ -54,7 +56,7 @@ export function SaveDialog({ save, onLoad, onResetAll, onClose }: Props) {
               <button class="btn small" onClick={() => setConfirmWipe(false)}>Cancel</button>
             </>
           ) : (
-            <button class="btn ghost small" onClick={() => setConfirmWipe(true)}>Reset all progress</button>
+            <button class="btn ghost small" disabled={running} onClick={() => setConfirmWipe(true)}>Reset all progress</button>
           )}
           <span class="spacer" />
           <button class="btn small" onClick={onClose}>Close</button>

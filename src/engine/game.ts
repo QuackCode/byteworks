@@ -100,6 +100,12 @@ export class GameRunner {
     }
   }
 
+  /** Throw away the current world and start from `state` (a loaded save, or null for a new game). */
+  reload(state: WorldState | null) {
+    this.latest = state;
+    this.restart();
+  }
+
   /** Kill the worker and boot a new one from the latest world state. */
   private restart() {
     this.worker.terminate();

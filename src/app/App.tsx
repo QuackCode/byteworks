@@ -1,235 +1,177 @@
-import { useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
+import { game } from "../engine/game";
+import type { RunnerStatus, UnlockInfo, WorldState } from "../engine/types";
+import { emptySave, loadSave, storeSave, type Save } from "../engine/save";
 import { FLOORS } from "../floors";
-import { LEVELS } from "../levels";
-import { runner, type RunnerStatus } from "../engine/runner";
-import type { CheckResult } from "../engine/events";
-import { loadSave, storeSave, type Save } from "../engine/save";
-import { daysOnFloor, isDayUnlocked, isFloorComplete, isFloorUnlocked, nextDay } from "../engine/progress";
 import { FloorView } from "./FloorView";
-import { Lesson } from "./Lesson";
-import { Workbench } from "./Workbench";
+import { InventoryBar } from "./InventoryBar";
+import { CodePanel, type ConsoleLine } from "./CodePanel";
 import { SaveDialog } from "./SaveDialog";
 
-// Only floors that have levels so far are part of the building.
-const BUILT_FLOORS = FLOORS.filter((f) => daysOnFloor(LEVELS, f.id).length > 0);
-// The part floors that feed Final Assembly (floor 7)
-const PART_FLOORS = [
-  { id: 1, name: "RAM" }, { id: 2, name: "CPU" }, { id: 3, name: "SSD" }, { id: 4, name: "Board" }, { id: 5, name: "GPU" },
-];
+const AUTOSAVE_MS = 5000;
+const MAX_LINES = 300;
 
 function isTyping(el: EventTarget | null) {
-  const node = el as HTMLElement | null;
-  return !!node?.closest?.(".cm-editor, input, textarea, [contenteditable]");
+  return !!(el as HTMLElement | null)?.closest?.(".cm-editor, input, textarea, [contenteditable]");
 }
 
 export function App() {
   const [save, setSave] = useState<Save>(loadSave);
-  const [day, setDay] = useState(() => nextDay(LEVELS, save.completed)?.day ?? 1);
-  const level = LEVELS.find((l) => l.day === day) ?? LEVELS[0];
-  const [floorId, setFloorId] = useState(level.floor);
-  const [slide, setSlide] = useState<"up" | "down" | "">("");
-  const [status, setStatus] = useState<RunnerStatus>(runner.status);
+  const saveRef = useRef(save);
+  const [world, setWorld] = useState<WorldState | null>(save.world);
+  const [animMs, setAnimMs] = useState(0);
+  const [status, setStatus] = useState<RunnerStatus>("loading");
   const [running, setRunning] = useState(false);
-  const [result, setResult] = useState<CheckResult | null>(null);
-  const [runId, setRunId] = useState(0);
-  const [codeVersion, setCodeVersion] = useState(0);
-  const [showSave, setShowSave] = useState(false);
-  const saveTimer = useRef<ReturnType<typeof setTimeout>>();
+  const [tree, setTree] = useState<UnlockInfo[]>([]);
+  const [lines, setLines] = useState<ConsoleLine[]>([]);
+  const [viewFloor, setViewFloor] = useState(save.world?.floor ?? "RAM");
+  const [panel, setPanel] = useState<"none" | "upgrades" | "help" | "save">(save.world ? "none" : "help");
+  const [helpId, setHelpId] = useState("start");
+  const [editKey, setEditKey] = useState(0);
 
-  useEffect(() => runner.onStatus(setStatus), []);
-
-  const floor = BUILT_FLOORS.find((f) => f.id === floorId) ?? BUILT_FLOORS[0];
-  const floorIndex = BUILT_FLOORS.indexOf(floor);
-  const floorDays = useMemo(() => daysOnFloor(LEVELS, floor.id), [floor.id]);
-  const floorLocked = !isFloorUnlocked(LEVELS, floor.id, save.completed);
-  const unlockedDays = LEVELS.filter((l) => isDayUnlocked(l.day, save.completed)).map((l) => l.day);
-  const code = save.code[day] ?? level.starter;
-
-  const update = (next: Save) => {
+  const persist = (patch: Partial<Save>) => {
+    const next = { ...saveRef.current, ...patch };
+    saveRef.current = next;
     setSave(next);
     storeSave(next);
   };
-
-  // A ref, so quick repeated key presses always move from the floor we're really on
-  const floorIndexRef = useRef(floorIndex);
-  floorIndexRef.current = floorIndex;
-
-  const goFloor = (index: number) => {
-    const target = BUILT_FLOORS[index];
-    if (!target || index === floorIndexRef.current) return;
-    setSlide(index > floorIndexRef.current ? "up" : "down");
-    floorIndexRef.current = index;
-    setFloorId(target.id);
-    // Jump to the next unfinished day on that floor (or its last day)
-    const days = daysOnFloor(LEVELS, target.id);
-    const pick = days.find((d) => !save.completed.includes(d.day) && isDayUnlocked(d.day, save.completed)) ?? days.at(-1)!;
-    if (isDayUnlocked(pick.day, save.completed)) selectDay(pick.day);
-  };
-
-  const selectDay = (d: number) => {
-    setDay(d);
-    setResult(null);
-    setCodeVersion((v) => v + 1);
-  };
+  const addLine = (text: string, kind: ConsoleLine["kind"]) => setLines((cur) => [...cur.slice(-(MAX_LINES - 1)), { text, kind }]);
 
   useEffect(() => {
+    game.onStatus = setStatus;
+    game.onState = (state, ms) => { setWorld(state); setAnimMs(ms); };
+    game.onPrint = (text) => addLine(text, "out");
+    game.setSpeed(save.settings.speed);
+    game.start(save.world);
+    game.tree().then(setTree).catch(() => addLine("Couldn't load the upgrade tree. Refresh the page.", "err"));
+    const timer = setInterval(() => { if (game.running && game.latest) persist({ world: game.latest }); }, AUTOSAVE_MS);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Camera follows the drone between floors (unless the player turned that off)
+  useEffect(() => {
+    if (save.settings.follow && world) setViewFloor(world.floor);
+  }, [world?.floor, save.settings.follow]);
+
+  const owned = new Set(world?.unlocks ?? []);
+  const floorIndex = Math.max(0, FLOORS.findIndex((f) => f.id === viewFloor));
+  const floor = FLOORS[floorIndex];
+  const lockedBy = tree.find((u) => u.id === floor.unlock)?.title ?? "an upgrade";
+  const windows = 1 + tree.filter((u) => owned.has(u.id)).reduce((sum, u) => sum + u.windows, 0);
+  const affordable = world ? tree.filter((u) => !owned.has(u.id) && u.requires.every((r) => owned.has(r))
+    && Object.entries(u.cost).every(([p, n]) => (world.inventory[p] ?? 0) >= n)).length : 0;
+
+  const indexRef = useRef(floorIndex);
+  indexRef.current = floorIndex;
+  const goFloor = (index: number) => {
+    if (index < 0 || index >= FLOORS.length) return;
+    indexRef.current = index;
+    setViewFloor(FLOORS[index].id);
+  };
+  useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (isTyping(e.target) || showSave) return;
-      if (e.key === "ArrowUp") { e.preventDefault(); goFloor(floorIndexRef.current + 1); }
-      if (e.key === "ArrowDown") { e.preventDefault(); goFloor(floorIndexRef.current - 1); }
+      if (isTyping(e.target) || panel !== "none") return;
+      if (e.key === "ArrowUp") { e.preventDefault(); goFloor(indexRef.current + 1); }
+      if (e.key === "ArrowDown") { e.preventDefault(); goFloor(indexRef.current - 1); }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  });
-
-  // Track the editor's latest text synchronously so Run never uses a stale save
-  const latestCode = useRef(code);
-  useEffect(() => { latestCode.current = code; }, [day, codeVersion]);
-  const trackCode = (text: string) => {
-    latestCode.current = text;
-    onCodeChange(text);
-  };
-
-  const onCodeChange = (text: string) => {
-    clearTimeout(saveTimer.current);
-    const d = day;
-    saveTimer.current = setTimeout(() => {
-      setSave((cur) => {
-        const next = { ...cur, code: { ...cur.code, [d]: text } };
-        storeSave(next);
-        return next;
-      });
-    }, 400);
-  };
+  }, [panel]);
 
   const onRun = async () => {
     if (running || status !== "ready") return;
-    clearTimeout(saveTimer.current);
+    const { files, active } = saveRef.current;
     setRunning(true);
+    addLine(`▶ Running ${active}`, "info");
     try {
-      const src = latestCode.current;
-      const r = await runner.check(src, level.check);
-      setResult(r);
-      setFloorId(level.floor);
-      setRunId((n) => n + 1);
-      const completed = r.passed && !save.completed.includes(day) ? [...save.completed, day] : save.completed;
-      update({ ...save, completed, code: { ...save.code, [day]: src } });
-    } catch (e) {
-      setResult({ passed: false, message: `Something went wrong running your code: ${e}`, stdout: "", error: null, events: [] });
+      const result = await game.run(files, active);
+      if (result.error) result.error.split("\n").forEach((l) => addLine(l, "err"));
+      else addLine(result.stopped ? "■ Stopped" : "✓ Program finished", "info");
+      persist({ world: result.state });
+    } catch (err) {
+      addLine(`Something went wrong: ${err}`, "err");
     } finally {
       setRunning(false);
     }
   };
 
-  const onReset = () => {
-    const { [day]: _, ...rest } = save.code;
-    update({ ...save, code: rest });
-    latestCode.current = level.starter;
-    setResult(null);
-    setCodeVersion((v) => v + 1);
+  const onBuy = async (id: string) => {
+    const result = await game.buy(id);
+    persist({ world: result.state });
+    const unlock = tree.find((u) => u.id === id);
+    if (result.ok && unlock?.help) { setHelpId(unlock.help); setPanel("help"); }
+    return result;
   };
 
-  const next = LEVELS.find((l) => l.day === day + 1);
-  const onNext = () => {
-    if (!next) return;
-    if (next.floor !== floor.id) {
-      const idx = BUILT_FLOORS.findIndex((f) => f.id === next.floor);
-      setSlide(idx > floorIndex ? "up" : "down");
-      setFloorId(next.floor);
-    }
-    selectDay(next.day);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  const setSpeed = (speed: number) => {
+    game.setSpeed(speed);
+    persist({ settings: { ...saveRef.current.settings, speed } });
   };
 
-  const done = save.completed.length;
-  const firstDayOnFloor = floorDays[0]?.day ?? 1;
-
+  const files = save.files;
   return (
     <div class="app">
       <header class="topbar">
         <div class="brand">🏭 <span>ByteWorks</span></div>
-        <div class="progress" title={`${done} of 30 shifts complete`}>
-          <div class="progress-track"><div class="progress-fill" style={{ width: `${(done / 30) * 100}%` }} /></div>
-          <span>{done}/30 shifts</span>
-        </div>
-        <button class="btn small" onClick={() => setShowSave(true)}>💾 Save</button>
+        <InventoryBar world={world} />
+        <span class="spacer" />
+        <button class="btn" onClick={() => setPanel("upgrades")}>⬆️ Upgrades{affordable > 0 && <span class="badge">{affordable}</span>}</button>
+        <button class="btn" onClick={() => setPanel("help")}>📖 Help</button>
+        <button class="btn" onClick={() => setPanel("save")}>💾 Save</button>
       </header>
 
-      <section class="building">
-        <nav class="elevator" aria-label="Floors">
-          <button class="btn lift" onClick={() => goFloor(floorIndex + 1)} disabled={floorIndex >= BUILT_FLOORS.length - 1}
-            aria-label="Go up a floor">▲</button>
-          <ol class="floor-list">
-            {[...BUILT_FLOORS].reverse().map((f) => {
-              const open = isFloorUnlocked(LEVELS, f.id, save.completed);
-              return (
+      <main class="game">
+        <section class="building">
+          <nav class="elevator" aria-label="Floors">
+            <button class="btn lift" onClick={() => goFloor(floorIndex + 1)} disabled={floorIndex >= FLOORS.length - 1} aria-label="Look one floor up">▲</button>
+            <ol class="floor-list">
+              {[...FLOORS].reverse().map((f) => (
                 <li key={f.id}>
-                  <button class={`floor-btn ${f.id === floor.id ? "here" : ""} ${open ? "" : "locked"}`}
-                    style={{ "--floor": f.color }} onClick={() => goFloor(BUILT_FLOORS.indexOf(f))}
-                    aria-current={f.id === floor.id ? "true" : undefined} title={f.name}>
-                    {f.label}
-                  </button>
+                  <button class={`floor-btn ${f.id === floor.id ? "here" : ""} ${f.unlock && !owned.has(f.unlock) ? "locked" : ""} ${world?.floor === f.id ? "drone" : ""}`}
+                    style={{ "--floor": f.color }} onClick={() => goFloor(FLOORS.indexOf(f))} title={f.name}
+                    aria-current={f.id === floor.id ? "true" : undefined}>{f.label}</button>
                 </li>
-              );
-            })}
-          </ol>
-          <button class="btn lift" onClick={() => goFloor(floorIndex - 1)} disabled={floorIndex <= 0}
-            aria-label="Go down a floor">▼</button>
-        </nav>
-        <div class={`floor-frame slide-${slide}`} key={floor.id} onAnimationEnd={() => setSlide("")}>
-          <FloorView floor={floor} days={floorDays} completed={save.completed} unlockedDays={unlockedDays}
-            currentDay={day} locked={floorLocked} lockedHint={`Finish Day ${firstDayOnFloor - 1} to open this floor`}
-            events={result && level.floor === floor.id ? result.events : []} runId={level.floor === floor.id ? runId : 0}
-            onSelectDay={selectDay}
-            incoming={floor.id === 7 ? PART_FLOORS.map((pf) => ({
-              name: pf.name,
-              icon: FLOORS[pf.id].icon,
-              ready: isFloorComplete(LEVELS, pf.id, save.completed),
-            })) : undefined} />
-        </div>
-      </section>
-
-      {floorLocked ? (
-        <section class="panel locked-panel">
-          <h2>🔒 {floor.name} is locked</h2>
-          <p>Finish Day {firstDayOnFloor - 1} to take the lift up to this floor.</p>
-        </section>
-      ) : (
-        <>
-          <nav class="day-tabs" aria-label="Shifts on this floor">
-            {floorDays.map((d) => {
-              const open = unlockedDays.includes(d.day);
-              const complete = save.completed.includes(d.day);
-              return (
-                <button key={d.day} class={`day-tab ${d.day === day ? "active" : ""}`} disabled={!open}
-                  onClick={() => selectDay(d.day)}>
-                  <span class="day-num">{complete ? "✓" : open ? d.day : "🔒"}</span>
-                  <span>Day {d.day}: {d.title}</span>
-                </button>
-              );
-            })}
+              ))}
+            </ol>
+            <button class="btn lift" onClick={() => goFloor(floorIndex - 1)} disabled={floorIndex <= 0} aria-label="Look one floor down">▼</button>
           </nav>
-          {level.floor === floor.id && (
-            <main class="shift">
-              <Lesson level={level} />
-              <Workbench level={level} code={code} codeKey={`${day}:${codeVersion}`} status={status}
-                running={running} result={result} completed={save.completed.includes(day)} hasNext={!!next}
-                onCodeChange={trackCode} onRun={onRun} onReset={onReset} onNext={onNext} />
-            </main>
-          )}
-        </>
-      )}
+          <div class="floor-frame" style={{ "--floor": floor.color }}>
+            <div class="floor-head">
+              <span>{floor.icon} {floor.name}</span>
+              <label class="follow">
+                <input type="checkbox" checked={save.settings.follow}
+                  onChange={(e) => persist({ settings: { ...saveRef.current.settings, follow: (e.target as HTMLInputElement).checked } })} />
+                Follow drone
+              </label>
+            </div>
+            {world
+              ? <FloorView floor={floor} world={world} animMs={animMs} locked={!!floor.unlock && !owned.has(floor.unlock)} lockedBy={lockedBy} />
+              : <div class="floor-locked">Starting the factory…</div>}
+          </div>
+        </section>
 
-      <footer class="foot">
-        Based on <a href="https://github.com/Asabeneh/30-Days-Of-Python" target="_blank" rel="noopener">30 Days of Python</a> by Asabeneh.
-        Python runs in your browser with <a href="https://pyodide.org" target="_blank" rel="noopener">Pyodide</a>. Use ▲ ▼ (or the arrow keys) to change floors.
-      </footer>
+        <CodePanel files={files} active={save.active} windows={windows} editKey={editKey}
+          running={running} ready={status === "ready"} speed={save.settings.speed} turbo={owned.has("turbo")} lines={lines}
+          onEdit={(text) => persist({ files: { ...saveRef.current.files, [saveRef.current.active]: text } })}
+          onSelect={(name) => { persist({ active: name }); setEditKey((k) => k + 1); }}
+          onAdd={(name) => { persist({ files: { ...saveRef.current.files, [name]: `# ${name}\n` }, active: name }); setEditKey((k) => k + 1); }}
+          onDelete={(name) => {
+            const { [name]: _gone, ...rest } = saveRef.current.files;
+            persist({ files: rest, active: saveRef.current.active === name ? "main.py" : saveRef.current.active });
+            setEditKey((k) => k + 1);
+          }}
+          onRun={onRun} onStop={() => game.stop()} onSpeed={setSpeed} onClear={() => setLines([])} />
+      </main>
 
-      {showSave && (
-        <SaveDialog save={save} onClose={() => setShowSave(false)}
-          onLoad={(s) => { update(s); const d = nextDay(LEVELS, s.completed) ?? LEVELS[0]; setFloorId(d.floor); selectDay(d.day); }}
-          onResetAll={() => { update({ v: 1, completed: [], code: {} }); setFloorId(0); selectDay(1); }} />
+      {status === "failed" && <div class="toast err">Python couldn't load. Check your internet connection and refresh.</div>}
+
+      {/* Task 12 adds: panel === "upgrades" → <UpgradePanel/>, panel === "help" → <HelpPanel/> */}
+      {panel === "save" && (
+        <SaveDialog save={save} running={running} onClose={() => setPanel("none")}
+          onLoad={(loaded) => { persist(loaded); game.reload(loaded.world); setEditKey((k) => k + 1); setLines([]); }}
+          onResetAll={() => { const fresh = emptySave(); persist(fresh); game.reload(null); setEditKey((k) => k + 1); setLines([]); setPanel("help"); setHelpId("start"); }} />
       )}
+      <footer class="foot">Inspired by <em>The Farmer Was Replaced</em>. Python runs in your browser with Pyodide. ▲ ▼ or arrow keys change floors.</footer>
     </div>
   );
 }

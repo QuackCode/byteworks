@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "preact/hooks";
 import { EditorView, basicSetup } from "codemirror";
 import { keymap } from "@codemirror/view";
+import { Prec } from "@codemirror/state";
 import { indentWithTab } from "@codemirror/commands";
 import { python } from "@codemirror/lang-python";
 import { oneDark } from "@codemirror/theme-one-dark";
@@ -27,10 +28,11 @@ export function Editor({ value, docKey, onChange, onRun }: Props) {
         python(),
         oneDark,
         EditorView.lineWrapping,
-        keymap.of([
+        // Highest precedence: basicSetup binds Mod-Enter to "insert blank line" otherwise
+        Prec.highest(keymap.of([
           { key: "Mod-Enter", run: () => (handlers.current.onRun(), true) },
           indentWithTab,
-        ]),
+        ])),
         EditorView.updateListener.of((u) => {
           if (u.docChanged) handlers.current.onChange(u.state.doc.toString());
         }),
