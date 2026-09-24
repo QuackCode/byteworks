@@ -57,6 +57,8 @@ for col in range(size):
 
 Using `get_world_size()` means your sweep keeps working when you buy a bigger grid.
 
-## Try this
+## 🎯 Quest
 
-Write code that moves the drone back to `(0, 0)` from wherever it is.
+**Harvest 9 parts, then use get_pos() to walk home so your program ends at (0, 0) with no bonks.** Doing it lets you buy **Functions** (you'll still need its parts).
+
+After your sweep, `x, y = get_pos()` tells you how many steps to walk West and South.

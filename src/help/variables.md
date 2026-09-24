@@ -75,6 +75,8 @@ while True:
     print(laps)
 ```
 
-## Try this
+## 🎯 Quest
 
-Make the drone stop by itself when you have 100 RAM, and print how many moves it took.
+**Write a program that stops by itself once you have 100 RAM (use num_items).** Doing it lets you buy **Conditionals** (you'll still need its parts).
+
+Wrap your route in `while num_items(Part.RAM) < 100:`. The program ends by itself as soon as the condition turns False.

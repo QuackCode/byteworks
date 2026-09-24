@@ -33,6 +33,8 @@ while assemble():
 
 A great final program farms every floor, then visits Final Assembly to fill orders, forever. Put your floor code in modules, use the sorting bonus on GPUs and big merged motherboards, and watch the computers roll out.
 
-## Try this
+## 🎯 Quest
 
-Make your program farm only the parts the current order is short of.
+**Build a computer at Final Assembly.** Doing it lets you buy **Classes** (you'll still need its parts).
+
+Farm the parts the order needs, `goto_floor(Floor.ASSEMBLY)`, then `assemble()`.

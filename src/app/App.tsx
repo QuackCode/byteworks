@@ -70,6 +70,7 @@ export function App() {
   const lockedBy = tree.find((u) => u.id === floor.unlock)?.title ?? "an upgrade";
   const windows = MAX_WINDOWS;   // code windows are free from the start; Modules unlocks `import` between them
   const affordable = world ? tree.filter((u) => !owned.has(u.id) && u.requires.every((r) => owned.has(r))
+    && (!u.quest || (world.quests ?? []).includes(u.quest.id))
     && Object.entries(u.cost).every(([p, n]) => (world.inventory[p] ?? 0) >= n)).length : 0;
 
   const indexRef = useRef(floorIndex);
@@ -198,7 +199,7 @@ export function App() {
           onHelp={(id) => { setHelpId(id); setPanel("help"); }} />
       )}
       {panel === "help" && (
-        <HelpPanel helpId={helpId} tree={tree} owned={owned} running={running}
+        <HelpPanel helpId={helpId} tree={tree} owned={owned} questsDone={new Set(world?.quests ?? [])} running={running}
           onPick={setHelpId} onClose={() => setPanel("none")} />
       )}
       {panel === "save" && (

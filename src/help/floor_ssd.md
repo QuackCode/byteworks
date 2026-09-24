@@ -34,6 +34,8 @@ Placing SSDs uses up RAM and CPUs, so if you only farm SSDs you'll run out. A go
 
 Tip: a bigger RAM grid (in Upgrades) means more RAM every lap.
 
-## Try this
+## 🎯 Quest
 
-Write a program that keeps RAM above 20 while it builds SSDs. Can you make it build SSDs only when you have spare parts?
+**Harvest 10 SSDs in one run.** Doing it lets you buy **Lists** (you'll still need its parts).
+
+SSDs cost RAM and CPUs, so keep all three floors busy in one program.

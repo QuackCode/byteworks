@@ -1,6 +1,7 @@
 """The functions a player's program can call. Each action changes the world, adds game ticks,
 tells the screen to redraw, then waits in real time so the player can watch it happen."""
 from . import balance as B
+from . import quests
 from .world import DIRS, FLOORS, PARTS, FaultyBoardError
 
 
@@ -21,8 +22,9 @@ class Floor:
 
 
 class Api:
-    def __init__(self, world, pace=None, on_change=None, on_print=None, max_ticks=None):
+    def __init__(self, world, pace=None, on_change=None, on_print=None, max_ticks=None, stats=None):
         self.world = world
+        self.stats = stats or quests.RunStats()
         self.pace = pace
         self.on_change = on_change
         self.on_print = on_print or (lambda text: None)
@@ -33,6 +35,8 @@ class Api:
         self.world.clock += ticks
         if action != "sense":
             self.world.bumped = bumped
+        if action != "sense":
+            self.check_quests()
         ms = ticks * B.MS_PER_TICK / B.SPEEDS[self.world.speed_level]
         if self.on_change and action != "sense":   # sensing changes nothing on screen
             self.on_change(ms)
@@ -50,10 +54,22 @@ class Api:
         if value not in allowed:
             raise ValueError(f"{what} must be one of: {', '.join(allowed)}")
 
+    def check_quests(self, final=False):
+        for quest in quests.update(self.world, self.stats, final):
+            self.on_print(f"🏆 Quest complete: {quest.title}!")
+
     # ---- actions
     def harvest(self):
+        part, floor = self.world.here().part, self.world.floor
         try:
-            return self.world.harvest() > 0
+            gained = self.world.harvest()
+            if gained > 0:
+                s = self.stats
+                s.harvested[part] = s.harvested.get(part, 0) + gained
+                s.floors_harvested.add(floor)
+                s.big_board |= part == "BOARD" and gained > 1
+                s.gpu_sorted |= part == "GPU" and gained > 1
+            return gained > 0
         finally:
             self._spend("harvest")
 
@@ -62,6 +78,7 @@ class Api:
             self._spend("move")
             return True
         # Walked into a wall: stunned for 1 real second, whatever the Drone Speed
+        self.stats.bonks += 1
         self.on_print(f"Bonk! The drone hit the {direction} wall and is stunned for 1 second.")
         stun_ticks = round(B.STUN_MS * B.SPEEDS[self.world.speed_level] / B.MS_PER_TICK)
         self._spend("move", stun_ticks, bumped=True)
@@ -71,6 +88,7 @@ class Api:
         text = (sep.join(str(v) for v in values) + end).rstrip("\n")
         if len(text) > MAX_PRINT:
             text = text[:MAX_PRINT] + " …(cut short)"
+        self.stats.printed_ram |= quests.shows_number(text, self.world.inventory["RAM"])
         self.on_print(text)
         self._spend("print")
 
@@ -101,6 +119,7 @@ class Api:
 
     def assemble(self):
         ok = self.world.assemble()
+        self.stats.assembled += ok
         self._spend("assemble")
         return ok
 

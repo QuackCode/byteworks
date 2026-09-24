@@ -212,3 +212,11 @@ code, pre { font-family: var(--mono); }
 @keyframes hover { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1.6px); } }
 @keyframes smoke { from { transform: translateY(4px); opacity: 0.2; } 40% { opacity: 1; } to { transform: translateY(-6px); opacity: 0; } }
 @keyframes bonk { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+
+.upgrade-quest { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; font-size: 0.9rem; color: #ffd98a; }
+.upgrade-quest.done { color: var(--ok); }
+.quest-banner { display: grid; gap: 2px; margin: 4px 0 12px; padding: 10px 12px; border-radius: 10px; background: #2a2616; border: 1px solid #6b5a22; }
+.quest-banner strong { color: var(--accent); }
+.quest-banner small { color: var(--muted); }
+.quest-banner.done { background: #13301f; border-color: var(--ok); }
+.quest-banner.done strong { color: var(--ok); }

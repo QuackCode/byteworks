@@ -12,6 +12,8 @@ export function UpgradePanel({ tree, world, running, onBuy, onHelp, onClose }: P
   const [busy, setBusy] = useState(false);
   const owned = new Set(world.unlocks);
   const canAfford = (u: UnlockInfo) => Object.entries(u.cost).every(([p, n]) => (world.inventory[p] ?? 0) >= n);
+  const questsDone = new Set(world.quests ?? []);
+  const questDone = (u: UnlockInfo) => !u.quest || questsDone.has(u.quest.id);
   const ready = tree.filter((u) => !owned.has(u.id) && u.requires.every((r) => owned.has(r)));
   const readyIds = new Set(ready.map((u) => u.id));
   // One step ahead only: items whose missing requirements are all buyable right now
@@ -40,9 +42,15 @@ export function UpgradePanel({ tree, world, running, onBuy, onHelp, onClose }: P
           <span key={p} class={`cost ${(world.inventory[p] ?? 0) >= n ? "ok" : ""}`}><PartIcon part={p} size={18} label={p} /> {n}</span>
         ))}
       </div>
+      {u.quest && state !== "done" && (
+        <div class={`upgrade-quest ${questDone(u) ? "done" : ""}`}>
+          <span>{questDone(u) ? "✓ Quest done:" : "🎯 Quest:"} {u.quest.title}</span>
+          {!questDone(u) && <button class="linkish" onClick={() => onHelp(u.quest!.page)}>How?</button>}
+        </div>
+      )}
       {state === "ready" && (
-        <button class="btn small primary" disabled={running || busy || !canAfford(u)} onClick={() => buy(u)}>
-          {running ? "Stop program to buy" : canAfford(u) ? "Buy" : "Not enough parts"}
+        <button class="btn small primary" disabled={running || busy || !canAfford(u) || !questDone(u)} onClick={() => buy(u)}>
+          {running ? "Stop program to buy" : !questDone(u) ? "Finish the quest first" : canAfford(u) ? "Buy" : "Not enough parts"}
         </button>
       )}
       {state === "next" && <div class="upgrade-needs">Needs {u.requires.filter((r) => !owned.has(r)).map(titleOf).join(", ")}</div>}

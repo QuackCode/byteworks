@@ -50,6 +50,8 @@ for f in floors:
 print(visited)
 ```
 
-## Try this
+## 🎯 Quest
 
-Use a set to count how many **different** floors your drone visits in one lap of your program.
+**Use a set in your code and harvest on 4 different floors in one run.** Doing it lets you buy **Dictionaries** (you'll still need its parts).
+
+Make `visited = set()` and `add` each floor you work on. Harvest something on four different floors.

@@ -8,10 +8,13 @@ sys.path.insert(0, str(ROOT / "src" / "python"))
 
 from game import balance as B  # noqa: E402
 from game import unlocks as U  # noqa: E402
+from game.quests import QUEST_FOR_UNLOCK  # noqa: E402
 from game.runner import run_program  # noqa: E402
 from game.world import World  # noqa: E402
 
 BOTS = Path(__file__).parent / "bots"
+QUEST_BOTS = Path(__file__).parent / "quests"   # a reference solution for every quest
+QUEST_CHUNK = 100_000
 CHUNK = 20_000            # ticks per run (a full bot lap must fit, or it never reaches later floors)
 MAX_TOTAL = 6_000_000     # safety limit on game ticks
 MAX_GAP_MS = 5 * 60_000   # never more than 5 minutes of waiting for the next upgrade (or computer)
@@ -34,13 +37,38 @@ def bot(name):
 class ProgressionTest(unittest.TestCase):
     """Real waiting time = game ticks x MS_PER_TICK / drone speed (there's no fast-forward button)."""
 
+    def farm_chunk(self, world, name):
+        start, speed = world.clock, B.SPEEDS[world.speed_level]
+        result = run_program(world, bot(name), max_ticks=CHUNK)
+        self.assertTrue(result["ok"], f"{name} failed: {result.get('error')}")
+        self.real_ms += (world.clock - start) * B.MS_PER_TICK / speed
+
     def farm_until(self, world, name, done):
         while not done():
             self.assertLess(world.clock, MAX_TOTAL, f"stuck at {name}: {world.inventory}")
+            self.farm_chunk(world, name)
+
+    def do_quest(self, world, quest, stage):
+        """Run the quest's reference solution until the game marks the quest done."""
+        files = {"main.py": (QUEST_BOTS / f"{quest}.py").read_text()}
+        helpers = QUEST_BOTS / f"{quest}_helpers.py"
+        if helpers.exists():
+            files["helpers.py"] = helpers.read_text()
+        for attempt in range(30):
+            if quest in world.quests:
+                return
+            # Test scaffolding: each attempt starts in the RAM floor's corner, because the early
+            # quest bots can't use get_pos() yet (players would walk the drone back themselves).
+            world.goto_floor("RAM")
+            world.x = world.y = 0
             start, speed = world.clock, B.SPEEDS[world.speed_level]
-            result = run_program(world, bot(name), max_ticks=CHUNK)
-            self.assertTrue(result["ok"], f"{name} failed: {result.get('error')}")
+            result = run_program(world, files, max_ticks=QUEST_CHUNK)
+            self.assertTrue(result["ok"], f"quest bot {quest} failed: {result.get('error')}")
             self.real_ms += (world.clock - start) * B.MS_PER_TICK / speed
+            if quest not in world.quests:      # probably short of parts: farm for a while, then retry
+                for _ in range(3):
+                    self.farm_chunk(world, stage)
+        self.assertIn(quest, world.quests, f"the {quest} quest bot never completed its quest")
 
     def reached(self, what):
         gap = self.real_ms - self.last_goal_ms
@@ -52,6 +80,8 @@ class ProgressionTest(unittest.TestCase):
         world = World(seed=3)
         for name, buys in STAGES:
             for uid in buys:
+                if uid in QUEST_FOR_UNLOCK:
+                    self.do_quest(world, QUEST_FOR_UNLOCK[uid], name)
                 cost = U.BY_ID[uid].cost
                 self.farm_until(world, name, lambda: all(world.inventory[p] >= n for p, n in cost.items()))
                 ok, message = U.buy(world, uid)

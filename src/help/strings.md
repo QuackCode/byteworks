@@ -76,6 +76,8 @@ while True:
     print(f"Lap {laps}: RAM {num_items(Part.RAM)}")
 ```
 
-## Try this
+## 🎯 Quest
 
-Print a report that says which part you have the fewest of.
+**print() an f-string that shows how much RAM you have.** Doing it lets you buy **Comprehensions & lambda** (you'll still need its parts).
+
+An f-string drops values straight into text, like `print(f"RAM: {num_items(Part.RAM)}")`.

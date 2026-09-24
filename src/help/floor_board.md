@@ -43,6 +43,8 @@ Here's the secret bonus. If a **square** of boards (2×2, 3×3 or bigger) is **a
 
 So the best plan is to fill the floor, fix every faulty board, **wait until the whole floor is ready**, then harvest once.
 
-## Try this
+## 🎯 Quest
 
-Write a function that returns `True` only when every board on the floor is finished and good. Use it to harvest one big 3×3 board.
+**Harvest a merged motherboard: a 2×2 square of good boards (or bigger).** Doing it lets you buy **Sets** (you'll still need its parts).
+
+Fill a 2×2 corner with boards, replace any faulty ones, wait until all four are finished, then harvest one of them.

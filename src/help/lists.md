@@ -69,6 +69,8 @@ while True:
 
 `Floor.CPU` and `Part.CPU` are the same text (`"CPU"`), so a floor name works as the part to place.
 
-## Try this
+## 🎯 Quest
 
-Keep a list of how much RAM you had after each lap, and print it every 5 laps.
+**Use a list of floors to harvest on 3 different floors in one run.** Doing it lets you buy **Strings & f-strings** (you'll still need its parts).
+
+Put the floors in a list and loop over it: `for f in floors:` then `goto_floor(f)` and work that floor.

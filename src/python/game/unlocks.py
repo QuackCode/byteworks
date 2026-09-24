@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 
 from . import balance as B
+from .quests import BY_ID as QUESTS, QUEST_FOR_UNLOCK
 
 
 @dataclass
@@ -101,6 +102,9 @@ def buy(world, unlock_id):
     missing = [BY_ID[r].title for r in u.requires if r not in world.unlocks]
     if missing:
         return False, f"{u.title} needs {', '.join(missing)} first."
+    quest = QUEST_FOR_UNLOCK.get(u.id)
+    if quest and quest not in world.quests:
+        return False, f"{u.title} needs a quest first: {QUESTS[quest].title}. (See 📖 Help.)"
     short = {p: n - world.inventory.get(p, 0) for p, n in u.cost.items() if world.inventory.get(p, 0) < n}
     if short:
         return False, "Not enough parts: need " + ", ".join(f"{n} more {p}" for p, n in short.items()) + "."
@@ -122,4 +126,10 @@ def windows_allowed(world):
 
 def tree_json():
     return [{"id": u.id, "title": u.title, "cost": u.cost, "requires": list(u.requires),
-             "summary": u.summary, "help": u.help, "kind": u.kind, "windows": u.windows} for u in UNLOCKS]
+             "summary": u.summary, "help": u.help, "kind": u.kind, "windows": u.windows,
+             "quest": _quest_json(u.id)} for u in UNLOCKS]
+
+
+def _quest_json(unlock_id):
+    quest = QUEST_FOR_UNLOCK.get(unlock_id)
+    return {"id": quest, "title": QUESTS[quest].title, "page": quest} if quest else None

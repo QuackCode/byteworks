@@ -10,6 +10,8 @@ and spend them on upgrades that unlock new Python features, faster drones, bigge
 2. The drone does exactly what you wrote. A `while True:` loop keeps it going until you press **■ Stop**.
 3. Parts you harvest are money. Open **⬆️ Upgrades** to buy new Python features, speed, grid sizes and floors.
 4. Every unlock opens a **📖 Help** page with a beginner explanation and "Try it" examples.
+   Each new Python feature also needs that page's **🎯 quest** (e.g. "sweep the floor twice with zero bonks"),
+   checked automatically from what your program actually did.
 5. The goal: build **10 complete computers** at Final Assembly.
 
 | Floor | Puzzle |

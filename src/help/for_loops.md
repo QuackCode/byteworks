@@ -68,6 +68,8 @@ else:
     print("Loop finished without a break")
 ```
 
-## Try this
+## 🎯 Quest
 
-Rewrite your RAM and CPU program with `for` loops. Is it shorter?
+**Sweep with for loops: harvest 18 parts in one run with zero bonks.** Doing it lets you buy **Positions & Tuples** (you'll still need its parts).
+
+Use `for lap in range(2):` around a snake route built from two nested `for` loops.

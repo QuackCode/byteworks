@@ -41,6 +41,8 @@ while True:
 
 `None` is Python's value for "nothing here".
 
-## Try this
+## 🎯 Quest
 
-Write one program that farms RAM **and** CPUs: a lap of the RAM floor, then a lap of the CPU floor, forever.
+**Farm both floors in one program: harvest 5 RAM and 5 CPUs in a single run.** Doing it lets you buy **For Loops & range** (you'll still need its parts).
+
+Do a lap of the CPU floor (harvest what's ready, `place` on empty tiles), `goto_floor(Floor.RAM)`, do a lap there, and loop. Chips need time to bake, so the CPUs come in on the second time round.

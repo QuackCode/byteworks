@@ -53,6 +53,8 @@ low = [f for f in floors if num_items(f) < 20]
 print("Running low on:", low)
 ```
 
-## Try this
+## 🎯 Quest
 
-Make a list of every floor where you have fewer than 50 parts, and only visit those floors.
+**Choose floors with a list comprehension, then harvest on 2 of them in one run.** Doing it lets you buy **Higher-order Functions** (you'll still need its parts).
+
+Something like `floors = [f for f in all_floors if num_items(f) < 500]`, then visit those floors.

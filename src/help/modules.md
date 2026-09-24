@@ -55,6 +55,8 @@ print(random.randint(1, 6), random.choice(["RAM", "CPU"]))
 
 Only `math`, `random` and your own code windows can be imported in ByteWorks.
 
-## Try this
+## 🎯 Quest
 
-Move your sorting code into a `sorting` window and your floor-tending code into `helpers`, so `main.py` is only a few lines long.
+**Split your code: import a second code window from main.py and harvest 9 parts.** Doing it lets you buy **Exceptions** (you'll still need its parts).
+
+Make a `helpers` window with a function in it, then `import helpers` in main.py and call the function.

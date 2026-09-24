@@ -51,6 +51,7 @@ class World:
         self.order = None
         self.orders_done = 0
         self.bumped = False   # True right after the drone walked into a wall (drawn as 💫)
+        self.quests = set()   # ids of completed quests
         self.open_floor("RAM")
 
     # ---------------------------------------------------------------- floors
@@ -250,18 +251,21 @@ class World:
             "order": dict(self.order) if self.order else None,
             "orders_done": self.orders_done,
             "bumped": self.bumped,
+            "quests": sorted(self.quests),
             "rng": [version, list(internal), gauss],
         }
 
     @classmethod
     def load(cls, state):
         """(world, ok). A save that can't be read gives a fresh world and ok=False instead of crashing."""
+        from .quests import BY_ID as QUEST_IDS
         from .unlocks import BY_ID
         try:
             world = cls.from_state(state)
         except (KeyError, TypeError, ValueError, IndexError, AttributeError):
             return cls(seed=1), False
         world.unlocks = {u for u in world.unlocks if u in BY_ID}   # upgrades removed in newer versions
+        world.quests = {q for q in world.quests if q in QUEST_IDS}
         return world, True
 
     @classmethod
@@ -289,6 +293,7 @@ class World:
         w.order = dict(state["order"]) if state.get("order") else None
         w.orders_done = int(state.get("orders_done", 0))
         w.bumped = bool(state.get("bumped", False))
+        w.quests = set(state.get("quests", []))
         if "ASSEMBLY" in w.floors and w.order is None:
             w.new_order()
         return w

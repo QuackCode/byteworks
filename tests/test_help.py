@@ -11,6 +11,7 @@ from game.gating import check  # noqa: E402
 from game.sandbox import run_snippet  # noqa: E402
 from game.runner import run_program  # noqa: E402
 from game.world import World  # noqa: E402
+from game.quests import QUESTS  # noqa: E402
 
 HELP = ROOT / "src" / "help"
 FENCE = "`" * 3
@@ -55,6 +56,7 @@ class HelpPageTests(unittest.TestCase):
                     continue
                 world = World(seed=1)
                 world.inventory.update({p: 10**6 for p in world.inventory})
+                world.quests = {q.id for q in QUESTS}
                 for u in U.UNLOCKS:              # list order is a valid buying order
                     if u.id in owned_at(path.stem):
                         U.buy(world, u.id)

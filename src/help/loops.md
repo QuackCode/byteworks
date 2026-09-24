@@ -74,6 +74,8 @@ while True:
     wait(300)
 ```
 
-## Try this
+## 🎯 Quest
 
-Write a loop that sweeps the whole 3×3 RAM floor forever **without a single bonk**. Then buy **Drone Speed 1** to make it faster.
+**Use a loop to sweep the floor twice in one run: 18 RAM with zero bonks.** Doing it lets you buy **Variables & Operators** (you'll still need its parts).
+
+Put a whole snake route inside `while True:`, press Run, and let it go round twice. A single bonk spoils it, so check your route first.

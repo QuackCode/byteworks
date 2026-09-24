@@ -49,6 +49,10 @@ Every action takes a moment of game time. A RAM stick needs a little while to **
 
 Parts are money. Open **⬆️ Upgrades** to spend them. Your first goal is **Loops (5 RAM)**. With loops, the drone can work forever without you pressing Run again. Each upgrade teaches a new bit of Python, and you'll find its page here in Help.
 
-## Try this
+Every new Python feature also needs a **🎯 quest**: a small task from the help page you read before it. The game checks your runs automatically and shows 🏆 in the Console when you've done one. Your first quest is at the bottom of this page.
 
-Write a program that harvests all 9 RAM sticks on the floor, then buy **Loops**.
+## 🎯 Quest
+
+**Harvest all 9 RAM sticks in one run.** Doing it lets you buy **Loops** (you'll still need its parts).
+
+Plan a route that visits every square without bonking a wall: nine `harvest()` calls, with moves in between.

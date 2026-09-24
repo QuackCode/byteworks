@@ -209,6 +209,7 @@ class UnlockTests(unittest.TestCase):
 
     def test_buy_pays_and_applies(self):
         w = World()
+        w.quests.add("start")
         w.inventory["RAM"] = 100
         ok, _ = U.buy(w, "loops")
         self.assertTrue(ok)
@@ -217,6 +218,7 @@ class UnlockTests(unittest.TestCase):
 
     def test_buy_refuses_missing_prereq_money_or_repeat(self):
         w = World()
+        w.quests = {q.id for q in Q.QUESTS}
         self.assertFalse(U.buy(w, "loops")[0])               # can't afford
         w.inventory["RAM"] = 10_000
         self.assertFalse(U.buy(w, "conditionals")[0])        # missing prerequisite
@@ -226,6 +228,7 @@ class UnlockTests(unittest.TestCase):
 
     def test_floor_grid_speed_effects(self):
         w = World()
+        w.quests = {q.id for q in Q.QUESTS}
         w.inventory.update(RAM=100_000, CPU=100_000)
         for uid in ["loops", "variables", "conditionals", "floor_cpu", "speed1", "grid_ram_4"]:
             self.assertTrue(U.buy(w, uid)[0], uid)
@@ -294,6 +297,7 @@ class GatingTests(unittest.TestCase):
 from game.runner import run_program  # noqa: E402
 from game.sandbox import run_snippet  # noqa: E402
 from game import unlocks as U2  # noqa: E402
+from game import quests as Q  # noqa: E402
 
 
 def with_prereqs(ids):
@@ -311,6 +315,7 @@ def unlocked_world(*ids, **inventory):
     """A world that owns the given unlocks (plus everything they require), with an empty inventory."""
     w = World(seed=5)
     w.inventory.update({p: 10**6 for p in w.inventory})
+    w.quests = {q.id for q in Q.QUESTS}
     wanted = with_prereqs(ids)
     for uid in [u.id for u in U2.UNLOCKS]:   # list order is a valid buying order
         if uid in wanted:
@@ -509,6 +514,91 @@ class WallTests(unittest.TestCase):
         out = []
         run_program(w, {"main.py": "if not move(South):\n    print('blocked')\n"}, on_print=out.append)
         self.assertIn("blocked", out)
+
+
+def quest_world(*ids):
+    """Owns the given unlocks (and prerequisites) but has done NO quests yet."""
+    w = unlocked_world(*ids)
+    w.quests = set()
+    return w
+
+
+class QuestTests(unittest.TestCase):
+    def test_upgrade_needs_its_quest(self):
+        w = World()
+        w.inventory["RAM"] = 100
+        ok, msg = U.buy(w, "loops")
+        self.assertFalse(ok)
+        self.assertIn("Harvest all 9 RAM sticks", msg)
+        self.assertEqual(w.inventory["RAM"], 100)          # nothing paid
+
+    def test_start_quest_by_harvesting_all_nine(self):
+        w = World()
+        out = []
+        lap = "harvest()\nmove(North)\nharvest()\nmove(North)\nharvest()\nmove(East)\nharvest()\nmove(South)\nharvest()\nmove(South)\nharvest()\nmove(East)\nharvest()\nmove(North)\nharvest()\nmove(North)\nharvest()\n"
+        run_program(w, {"main.py": lap}, on_print=out.append)
+        self.assertIn("start", w.quests)
+        self.assertTrue(any("Quest complete" in line for line in out))
+        w.inventory["RAM"] = 100
+        self.assertTrue(U.buy(w, "loops")[0])
+
+    def test_quest_counts_when_stopped(self):
+        w = quest_world("loops")
+        lap = "while True:\n" + "".join(f"    {c}\n" for c in ["harvest()", "move(North)", "harvest()", "move(North)", "harvest()", "move(East)", "harvest()", "move(South)", "harvest()", "move(South)", "harvest()", "move(East)", "harvest()", "move(North)", "harvest()", "move(North)", "harvest()", "move(West)", "move(West)", "move(South)", "move(South)"])
+        run_program(w, {"main.py": lap}, max_ticks=6000)
+        self.assertIn("loops", w.quests)
+
+    def test_loops_quest_fails_with_a_bonk(self):
+        w = quest_world("loops")
+        code = "while True:\n    harvest()\n    move(North)\n"
+        run_program(w, {"main.py": code}, max_ticks=20000)
+        self.assertNotIn("loops", w.quests)
+
+    def test_finish_quest_needs_program_to_end_by_itself(self):
+        w = quest_world("variables")
+        w.inventory["RAM"] = 150
+        run_program(w, {"main.py": "while num_items(Part.RAM) > 0:\n    harvest()\n    move(North)\n    harvest()\n    move(South)\n"}, max_ticks=3000)
+        self.assertNotIn("variables", w.quests)             # stopped, not finished
+        run_program(w, {"main.py": "while num_items(Part.RAM) < 100:\n    harvest()\n"})
+        self.assertNotIn("variables", w.quests)             # finished, but harvested nothing
+        w.inventory["RAM"] = 99
+        run_program(w, {"main.py": "while num_items(Part.RAM) < 100:\n    harvest()\n    move(North)\n    harvest()\n    move(South)\n"})
+        self.assertIn("variables", w.quests)
+
+    def test_code_feature_quests(self):
+        w = quest_world("strings")
+        w.inventory["RAM"] = 42
+        run_program(w, {"main.py": 'print("RAM: 42")\n'})
+        self.assertNotIn("strings", w.quests)               # no f-string
+        run_program(w, {"main.py": 'print(f"RAM: {num_items(Part.RAM)}")\n'})
+        self.assertIn("strings", w.quests)
+
+    def test_big_board_quest(self):
+        w = quest_world("floor_board")
+        w.goto_floor("BOARD")
+        for x in (0, 1):
+            for y in (0, 1):
+                w.grid()[x][y] = Tile("BOARD", 0, False, None, 0)
+        run_program(w, {"main.py": "harvest()\n"})
+        self.assertIn("floor_board", w.quests)
+
+    def test_quests_are_saved(self):
+        w = World()
+        w.quests.add("start")
+        loaded, ok = World.load(w.to_state())
+        self.assertEqual(loaded.quests, {"start"})
+        state = w.to_state()
+        state["quests"] = ["start", "no_such_quest"]
+        del state["quests"]
+        self.assertEqual(World.load(state)[0].quests, set())
+
+    def test_tree_lists_quests(self):
+        tree = {u["id"]: u for u in U.tree_json()}
+        self.assertEqual(tree["loops"]["quest"]["page"], "start")
+        self.assertIsNone(tree["floor_cpu"]["quest"])
+        self.assertIsNone(tree["speed1"]["quest"])
+        gated = [u for u in U.UNLOCKS if u.kind == "feature"]
+        self.assertTrue(all(tree[u.id]["quest"] for u in gated), "every Python feature needs a quest")
 
 
 if __name__ == "__main__":

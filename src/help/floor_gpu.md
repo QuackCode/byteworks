@@ -33,6 +33,8 @@ for i in range(2):
 
 Start at the West end of the row. On a bigger floor, go round `size - 1` times instead of 2.
 
-## Try this
+## 🎯 Quest
 
-Sort a whole 3×3 GPU floor and harvest it for the big bonus. Hint: rows first, then columns, and keep going until a full pass makes no swaps.
+**Sort a whole GPU floor and harvest it for the big bonus.** Doing it lets you buy **Modules** (you'll still need its parts).
+
+Fill the floor, wait until every chip is finished, then bubble sort each row and each column with `measure()` and `swap()`. Harvest once a full pass needs no swaps.
