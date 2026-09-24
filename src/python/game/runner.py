@@ -9,15 +9,15 @@ from .gating import ALLOWED_STDLIB, FORBIDDEN, check
 MAX_PROBLEMS = 6
 
 
-class GateError(Exception):
-    """A code window imported by the program uses something locked."""
-
-
 def run_program(world, files, entry="main.py", pace=None, on_change=None, on_print=None, max_ticks=None):
     if entry not in files:
         return {"ok": False, "stopped": False, "error": f"There's no code window called {entry}."}
     user_modules = {name[:-3] for name in files if name.endswith(".py") and name != entry}
-    problems = check(files[entry], world.unlocks, entry, user_modules)
+    # Check every code window before anything runs, so a locked feature in an imported
+    # file can't show up halfway through a program.
+    problems = []
+    for name in [entry] + sorted(f"{m}.py" for m in user_modules):
+        problems += check(files[name], world.unlocks, name, user_modules)
     if problems:
         return {"ok": False, "stopped": False, "error": "\n".join(problems[:MAX_PROBLEMS])}
 
@@ -32,9 +32,6 @@ def run_program(world, files, entry="main.py", pace=None, on_change=None, on_pri
             raise ModuleNotFoundError(f"No code window called {name!r}")
         if name not in loaded:
             filename = f"{name}.py"
-            found = check(files[filename], world.unlocks, filename, user_modules)
-            if found:
-                raise GateError("\n".join(found[:MAX_PROBLEMS]))
             module = types.ModuleType(name)
             module.__dict__.update(api.namespace())
             module.__dict__["__builtins__"] = safe_builtins
@@ -52,8 +49,6 @@ def run_program(world, files, entry="main.py", pace=None, on_change=None, on_pri
         return {"ok": True, "stopped": False}
     except (KeyboardInterrupt, StopRun):
         return {"ok": True, "stopped": True}
-    except GateError as exc:
-        return {"ok": False, "stopped": False, "error": str(exc)}
     except Exception as exc:  # the player's program crashed: explain it kindly
         return {"ok": False, "stopped": False, "error": friendly_error(exc, user_files)}
     finally:

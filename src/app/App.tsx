@@ -24,6 +24,7 @@ export function App() {
   const [animMs, setAnimMs] = useState(0);
   const [status, setStatus] = useState<RunnerStatus>("loading");
   const [running, setRunning] = useState(false);
+  const [stopping, setStopping] = useState(false);
   const [tree, setTree] = useState<UnlockInfo[]>([]);
   const [lines, setLines] = useState<ConsoleLine[]>([]);
   const [viewFloor, setViewFloor] = useState(save.world?.floor ?? "RAM");
@@ -37,13 +38,19 @@ export function App() {
     setSave(next);
     storeSave(next);
   };
-  const addLine = (text: string, kind: ConsoleLine["kind"]) => setLines((cur) => [...cur.slice(-(MAX_LINES - 1)), { text, kind }]);
+  const addLines = (texts: string[], kind: ConsoleLine["kind"]) =>
+    setLines((cur) => [...cur, ...texts.map((text) => ({ text, kind }))].slice(-MAX_LINES));
+  const addLine = (text: string, kind: ConsoleLine["kind"]) => addLines([text], kind);
 
   useEffect(() => {
     game.onStatus = setStatus;
     game.onState = (state, ms) => { setWorld(state); setAnimMs(ms); };
-    game.onPrint = (text) => addLine(text, "out");
-    game.setSpeed(save.settings.speed);
+    game.onPrint = (text) => addLines(text.split("\n"), "out");   // prints arrive in batches
+    game.onWarning = (message) => {
+      addLine(message, "err");
+      if (game.latest) persist({ world: game.latest });   // replace the unreadable save right away
+    };
+    game.setSpeed(1);   // no fast-forward: real-time speed comes only from Drone Speed upgrades
     game.start(save.world);
     game.tree().then(setTree).catch(() => addLine("Couldn't load the upgrade tree. Refresh the page.", "err"));
     const timer = setInterval(() => { if (game.running && game.latest) persist({ world: game.latest }); }, AUTOSAVE_MS);
@@ -94,6 +101,7 @@ export function App() {
       addLine(`Something went wrong: ${err}`, "err");
     } finally {
       setRunning(false);
+      setStopping(false);
     }
   };
 
@@ -103,11 +111,6 @@ export function App() {
     const unlock = tree.find((u) => u.id === id);
     if (result.ok && unlock?.help) { setHelpId(unlock.help); setPanel("help"); }
     return result;
-  };
-
-  const setSpeed = (speed: number) => {
-    game.setSpeed(speed);
-    persist({ settings: { ...saveRef.current.settings, speed } });
   };
 
   const files = save.files;
@@ -153,7 +156,7 @@ export function App() {
         </section>
 
         <CodePanel files={files} active={save.active} windows={windows} editKey={editKey}
-          running={running} ready={status === "ready"} speed={save.settings.speed} turbo={owned.has("turbo")} lines={lines}
+          running={running} stopping={stopping} ready={status === "ready"} lines={lines}
           onEdit={(text) => persist({ files: { ...saveRef.current.files, [saveRef.current.active]: text } })}
           onSelect={(name) => { persist({ active: name }); setEditKey((k) => k + 1); }}
           onAdd={(name) => { persist({ files: { ...saveRef.current.files, [name]: `# ${name}\n` }, active: name }); setEditKey((k) => k + 1); }}
@@ -162,7 +165,7 @@ export function App() {
             persist({ files: rest, active: saveRef.current.active === name ? "main.py" : saveRef.current.active });
             setEditKey((k) => k + 1);
           }}
-          onRun={onRun} onStop={() => game.stop()} onSpeed={setSpeed} onClear={() => setLines([])} />
+          onRun={onRun} onStop={() => { setStopping(true); game.stop(); }} onClear={() => setLines([])} />
       </main>
 
       {status === "failed" && <div class="toast err">Python couldn't load. Check your internet connection and refresh.</div>}

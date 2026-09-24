@@ -24,6 +24,8 @@ export function UpgradePanel({ tree, world, running, onBuy, onHelp, onClose }: P
     setBusy(true);
     try {
       setMessage((await onBuy(u.id)).message);
+    } catch (err) {
+      setMessage(`Something went wrong: ${err}`);
     } finally {
       setBusy(false);
     }

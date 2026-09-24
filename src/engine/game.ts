@@ -23,6 +23,8 @@ export class GameRunner {
   onState?: (state: WorldState, animMs: number) => void;
   onPrint?: (text: string) => void;
   onStatus?: (status: RunnerStatus) => void;
+  onWarning?: (message: string) => void;
+  private stopping = false;
 
   start(state: WorldState | null) {
     this.onStatus?.("loading");
@@ -34,7 +36,9 @@ export class GameRunner {
       type: "init", files, state: state ? JSON.stringify(state) : null,
       interrupt: this.interrupt?.buffer, ctrl: this.ctrl?.buffer,
     }).then((json) => {
-      this.setState(JSON.parse(json as string), 0);
+      const booted = JSON.parse(json as string) as { state: WorldState; warning: boolean };
+      this.setState(booted.state, 0);
+      if (booted.warning) this.onWarning?.("Your saved factory couldn't be read, so a new one was started.");
       this.onStatus?.("ready");
     }, (err) => {
       this.onStatus?.("failed");
@@ -84,12 +88,17 @@ export class GameRunner {
       throw err;
     } finally {
       this.running = false;
+      this.stopping = false;
       clearTimeout(this.watchdog);
+      // A Stop that arrived after the program had already finished must not hit the next command
+      if (this.interrupt) this.interrupt[0] = 0;
+      if (this.ctrl) Atomics.store(this.ctrl, 1, 0);
     }
   }
 
   stop() {
-    if (!this.running) return;
+    if (!this.running || this.stopping) return;   // a double-click must not start a second watchdog
+    this.stopping = true;
     if (this.interrupt && this.ctrl) {
       this.interrupt[0] = 2;                 // SIGINT: Python raises KeyboardInterrupt at the next bytecode
       Atomics.store(this.ctrl, 1, 1);

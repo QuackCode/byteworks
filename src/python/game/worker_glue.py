@@ -17,6 +17,11 @@ from .world import World
 WORLD = None
 _last_post = 0.0
 POST_EVERY = 1 / 60   # never flood the page with more than ~60 redraws per second
+PRINT_EVERY = 0.05    # console lines are sent in batches
+MAX_BUFFERED = 200    # a print flood keeps only the newest lines
+_prints = []
+_skipped = 0
+_last_print = 0.0
 
 
 def _state():
@@ -31,10 +36,38 @@ def _changed(anim_ms):
         bw_bridge.state(_state(), anim_ms)
 
 
+def _out(text):
+    global _skipped
+    _prints.append(text)
+    if len(_prints) > MAX_BUFFERED:
+        del _prints[0]
+        _skipped += 1
+    if time.monotonic() - _last_print >= PRINT_EVERY:
+        _flush_prints()
+
+
+def _flush_prints():
+    global _skipped, _last_print
+    if _prints or _skipped:
+        lines = ([f"…({_skipped} lines skipped)"] if _skipped else []) + _prints
+        bw_bridge.out("\n".join(lines))
+        _prints.clear()
+        _skipped = 0
+    _last_print = time.monotonic()
+
+
 def init(state_json):
+    """Start from a saved world. A save that can't be read starts a fresh world and says so."""
     global WORLD
-    WORLD = World.from_state(json.loads(state_json)) if state_json else World(seed=int(time.time()) % 1_000_000)
-    return _state()
+    ok = True
+    if state_json:
+        try:
+            WORLD, ok = World.load(json.loads(state_json))
+        except ValueError:
+            WORLD, ok = World(seed=1), False
+    else:
+        WORLD = World(seed=int(time.time()) % 1_000_000)
+    return json.dumps({"state": WORLD.to_state(), "warning": not ok})
 
 
 def new_game():
@@ -45,7 +78,8 @@ def new_game():
 
 def run(files_json, entry):
     result = run_program(WORLD, json.loads(files_json), entry,
-                         pace=bw_bridge.pace, on_change=_changed, on_print=bw_bridge.out)
+                         pace=bw_bridge.pace, on_change=_changed, on_print=_out)
+    _flush_prints()
     result["state"] = WORLD.to_state()
     return json.dumps(result)
 

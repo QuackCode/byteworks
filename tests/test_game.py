@@ -413,5 +413,63 @@ class ConstantsTests(unittest.TestCase):
         self.assertIn(f"export const WIN_COMPUTERS = {B.WIN_COMPUTERS};", floors_ts)
 
 
+class ReviewFixTests(unittest.TestCase):
+    def test_locked_helper_blocks_before_any_action(self):
+        w = unlocked_world("modules")
+        files = {"main.py": "harvest()\nmove(East)\nimport helpers\n",
+                 "helpers.py": "x = 1\ntry:\n    harvest()\nexcept Exception:\n    pass\n"}
+        r = run_program(w, files)
+        self.assertFalse(r["ok"])
+        self.assertIn("helpers.py line 2", r["error"])
+        self.assertEqual(w.clock, 0)
+        self.assertEqual(w.inventory["RAM"], 0)
+
+    def test_snippet_infinite_loop_is_stopped(self):
+        r = run_snippet("while True:\n    pass\n")
+        self.assertIn("never ends", r["error"])
+
+    def test_snippet_cannot_import_game(self):
+        r = run_snippet("import game.worker_glue\n")
+        self.assertIsNotNone(r["error"])
+
+    def test_snippet_output_is_capped(self):
+        r = run_snippet("for i in range(10**6):\n    print(i)\n")
+        self.assertLess(len(r["stdout"]), 30_000)
+
+    def test_print_is_truncated_and_accepts_end(self):
+        out = []
+        run_program(unlocked_world("variables"), {"main.py": "print('x' * 5000)\nprint('a', end='')\n"}, on_print=out.append)
+        self.assertLessEqual(len(out[0]), 520)
+        self.assertEqual(out[1], "a")
+
+    def test_sensing_costs_real_time(self):
+        w = unlocked_world("conditionals", "floor_cpu")
+        paced = []
+        run_program(w, {"main.py": "can_harvest()\n"}, pace=paced.append)
+        self.assertEqual(len(paced), 1)
+        self.assertGreater(paced[0], 0)
+
+    def test_long_wait_respects_stop(self):
+        w = unlocked_world("loops")
+        r = run_program(w, {"main.py": "wait(1000000000)\n"}, max_ticks=1000)
+        self.assertTrue(r["stopped"])
+        self.assertLess(w.clock, 10_000)
+
+    def test_bad_or_partial_save_falls_back(self):
+        w, ok = World.load({"inventory": {}, "floors": {}})
+        self.assertFalse(ok)
+        self.assertEqual(w.floor, "RAM")
+
+    def test_save_with_unknown_unlock_ids_still_loads(self):
+        w = World(seed=2)
+        state = w.to_state()
+        state["unlocks"] = ["loops", "removed_upgrade"]
+        del state["orders_done"]
+        loaded, ok = World.load(state)
+        self.assertTrue(ok)
+        self.assertEqual(loaded.unlocks, {"loops"})
+        self.assertEqual(loaded.orders_done, 0)
+
+
 if __name__ == "__main__":
     unittest.main()

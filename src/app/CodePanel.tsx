@@ -5,13 +5,12 @@ export interface ConsoleLine { text: string; kind: "out" | "err" | "info" }
 
 interface Props {
   files: Record<string, string>; active: string; windows: number; editKey: number;
-  running: boolean; ready: boolean; speed: number; turbo: boolean; lines: ConsoleLine[];
+  running: boolean; stopping: boolean; ready: boolean; lines: ConsoleLine[];
   onEdit: (text: string) => void; onSelect: (name: string) => void;
   onAdd: (name: string) => void; onDelete: (name: string) => void;
-  onRun: () => void; onStop: () => void; onSpeed: (speed: number) => void; onClear: () => void;
+  onRun: () => void; onStop: () => void; onClear: () => void;
 }
 
-const SPEEDS = [1, 4, 16];
 const NAME_OK = /^[a-z_][a-z0-9_]{0,19}$/;
 
 export function CodePanel(p: Props) {
@@ -63,16 +62,9 @@ export function CodePanel(p: Props) {
 
       <div class="controls">
         {p.running
-          ? <button class="btn danger" onClick={p.onStop}>■ Stop</button>
+          ? <button class="btn danger" onClick={p.onStop} disabled={p.stopping}>{p.stopping ? "Stopping…" : "■ Stop"}</button>
           : <button class="btn primary" onClick={p.onRun} disabled={!p.ready}>{p.ready ? `▶ Run ${p.active}` : "Starting Python…"}</button>}
         <span class="kbd-hint">Ctrl + Enter</span>
-        <span class="spacer" />
-        <div class="speed" role="group" aria-label="Speed">
-          {SPEEDS.map((s) => (
-            <button key={s} class={`btn small ${p.speed === s ? "on" : ""}`} onClick={() => p.onSpeed(s)}>x{s}</button>
-          ))}
-          {p.turbo && <button class={`btn small ${p.speed === 0 ? "on" : ""}`} onClick={() => p.onSpeed(0)} title="No animation">⚡ Turbo</button>}
-        </div>
       </div>
 
       <div class="console">

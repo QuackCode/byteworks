@@ -77,7 +77,6 @@ UNLOCKS = [
     FLOOR("floor_assembly", "ASSEMBLY", "Final Assembly", {"GPU": 200}, ["exceptions"],
           "Fill customer orders to build complete computers."),
     F("classes", "Classes", {"COMPUTER": 1}, ["floor_assembly"], "Design your own objects."),
-    Unlock("turbo", "Turbo", {"COMPUTER": 2}, ("floor_assembly",), summary="A max-speed mode with no animation."),
 ]
 
 GRID_BASE = {"RAM": 20, "CPU": 10, "SSD": 10, "BOARD": 8, "GPU": 20}

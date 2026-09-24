@@ -4,6 +4,10 @@ from . import balance as B
 from .world import DIRS, FLOORS, PARTS, FaultyBoardError
 
 
+MAX_PRINT = 500     # characters per printed line
+WAIT_STEP = 100     # ticks per step of wait()
+
+
 class StopRun(BaseException):
     """Ends a run early (tick budget used up). BaseException, so `except Exception` can't catch it."""
 
@@ -27,12 +31,11 @@ class Api:
     def _spend(self, action, ticks=None):
         ticks = B.ACTION_TICKS[action] if ticks is None else ticks
         self.world.clock += ticks
-        if action != "sense":
-            ms = ticks * B.MS_PER_TICK / B.SPEEDS[self.world.speed_level]
-            if self.on_change:
-                self.on_change(ms)
-            if self.pace:
-                self.pace(ms)
+        ms = ticks * B.MS_PER_TICK / B.SPEEDS[self.world.speed_level]
+        if self.on_change and action != "sense":   # sensing changes nothing on screen
+            self.on_change(ms)
+        if self.pace:                               # ...but still takes real time
+            self.pace(ms)
         if self.limit is not None and self.world.clock >= self.limit:
             raise StopRun()
 
@@ -57,14 +60,20 @@ class Api:
         self._spend("move")
         return True
 
-    def print(self, *values, sep=" "):
-        self.on_print(sep.join(str(v) for v in values))
+    def print(self, *values, sep=" ", end="\n"):
+        text = (sep.join(str(v) for v in values) + end).rstrip("\n")
+        if len(text) > MAX_PRINT:
+            text = text[:MAX_PRINT] + " …(cut short)"
+        self.on_print(text)
         self._spend("print")
 
     def wait(self, ticks):
         if not isinstance(ticks, int) or ticks < 0:
             raise ValueError("wait() needs a whole number of ticks, like wait(100)")
-        self._spend("move", ticks)   # any non-sense action name works: it animates and paces
+        while ticks > 0:             # in small steps, so Stop and tick budgets work mid-wait
+            step = min(ticks, WAIT_STEP)
+            self._spend("move", step)   # any non-sense action name works: it animates and paces
+            ticks -= step
 
     def place(self, part):
         self._check(part, PARTS[:-1], "place()'s part")

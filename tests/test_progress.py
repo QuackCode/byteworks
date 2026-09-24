@@ -12,8 +12,9 @@ from game.runner import run_program  # noqa: E402
 from game.world import World  # noqa: E402
 
 BOTS = Path(__file__).parent / "bots"
-CHUNK = 20_000            # ticks per run before the test checks progress again
-MAX_TOTAL = 6_000_000     # ~3.3 hours of drone time at speed x1
+CHUNK = 20_000            # ticks per run (a full bot lap must fit, or it never reaches later floors)
+MAX_TOTAL = 6_000_000     # safety limit on game ticks
+MAX_GAP_MS = 5 * 60_000   # never more than 5 minutes of waiting for the next upgrade (or computer)
 
 STAGES = [
     ("s0_start", ["loops"]),
@@ -22,7 +23,7 @@ STAGES = [
     ("s3_ssd", ["lists", "strings", "speed3", "grid_cpu_4", "floor_board"]),
     ("s4_board", ["sets", "dicts", "comprehensions", "hof", "speed4", "floor_gpu"]),
     ("s5_gpu", ["modules", "exceptions", "speed5", "floor_assembly"]),
-    ("s6_assembly", ["classes", "turbo"]),
+    ("s6_assembly", ["classes"]),
 ]
 
 
@@ -31,13 +32,23 @@ def bot(name):
 
 
 class ProgressionTest(unittest.TestCase):
+    """Real waiting time = game ticks x MS_PER_TICK / drone speed (there's no fast-forward button)."""
+
     def farm_until(self, world, name, done):
         while not done():
-            self.assertLess(world.clock, MAX_TOTAL, f"too slow / stuck at {name}: {world.inventory}")
+            self.assertLess(world.clock, MAX_TOTAL, f"stuck at {name}: {world.inventory}")
+            start, speed = world.clock, B.SPEEDS[world.speed_level]
             result = run_program(world, bot(name), max_ticks=CHUNK)
             self.assertTrue(result["ok"], f"{name} failed: {result.get('error')}")
+            self.real_ms += (world.clock - start) * B.MS_PER_TICK / speed
 
-    def test_game_can_be_finished(self):
+    def reached(self, what):
+        gap = self.real_ms - self.last_goal_ms
+        self.gaps.append((gap, what))
+        self.last_goal_ms = self.real_ms
+
+    def test_game_can_be_finished_with_short_waits(self):
+        self.real_ms, self.last_goal_ms, self.gaps = 0.0, 0.0, []
         world = World(seed=3)
         for name, buys in STAGES:
             for uid in buys:
@@ -45,9 +56,15 @@ class ProgressionTest(unittest.TestCase):
                 self.farm_until(world, name, lambda: all(world.inventory[p] >= n for p, n in cost.items()))
                 ok, message = U.buy(world, uid)
                 self.assertTrue(ok, f"{name}: {message}")
-        self.farm_until(world, "s6_assembly", lambda: world.inventory["COMPUTER"] >= B.WIN_COMPUTERS)
-        hours = world.clock * B.MS_PER_TICK / 3_600_000
-        print(f"\nReference bots finished in {world.clock:,} ticks (~{hours:.1f} h at x1)", file=sys.stderr)
+                self.reached(uid)
+        for n in range(1, B.WIN_COMPUTERS + 1):
+            self.farm_until(world, "s6_assembly", lambda: world.inventory["COMPUTER"] >= n)
+            self.reached(f"computer {n}")
+        worst, what = max(self.gaps)
+        print(f"\nReference bots finished in {self.real_ms / 60_000:.0f} min of drone time; "
+              f"longest wait {worst / 60_000:.1f} min (for {what})", file=sys.stderr)
+        slow = [f"{w} ({g / 60_000:.1f} min)" for g, w in self.gaps if g > MAX_GAP_MS]
+        self.assertEqual(slow, [], "these took more than 5 minutes of waiting")
 
 
 if __name__ == "__main__":

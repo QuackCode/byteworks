@@ -57,4 +57,4 @@ while True:
 
 ## Try this
 
-Write a loop that sweeps the whole 3×3 RAM floor forever. Then speed it up with the **x4** button.
+Write a loop that sweeps the whole 3×3 RAM floor forever. Then buy **Drone Speed 1** to make it faster.

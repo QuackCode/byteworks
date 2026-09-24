@@ -47,6 +47,9 @@ browser with an export/import save code, a floor lift with ▲/▼ buttons and a
   and testable.
 - **Pacing**: real delay per action = `ticks × ms_per_tick ÷ speed`. Speed comes from drone-speed upgrades and a
   UI speed slider (×1, ×4, ×16). There's also a "turbo" setting with no animation, available only after an upgrade.
+  **Amended 2026-09-24 (user request):** no speed buttons or Turbo. Real-time speed comes only from Drone Speed
+  upgrades, and the balance guarantees no upgrade (or computer) needs more than 5 minutes of waiting
+  (enforced by `tests/test_progress.py`).
 - **Floors**: each floor has its own `n × n` grid (it starts at 3, and grid upgrades apply per floor). The grid
   wraps around at the edges, as in TFWR. There's one drone. It has a position and a current floor.
 - **Inventory**: one global dict of part → count.
@@ -82,7 +85,7 @@ browser with an export/import save code, a floor lift with ▲/▼ buttons and a
 | **SSD** | `place(Part.SSD)` costs RAM + CPU and yields several SSDs | operators, `num_items`, planning across floors |
 | **Motherboard** | `place(Part.BOARD)` costs SSDs. About 20% of boards finish **faulty**. Harvesting a faulty board **raises `FaultyBoardError`**, which stops the program unless it's caught. A fully good `k × k` block merges into one big board worth `k³` | `is_faulty()` checks, lists/sets to remember positions, functions, then `try/except` |
 | **GPU** | `place(Part.GPU)` gives a chip with a random score. Harvesting a fully **sorted** grid (rows increase east, columns increase north) pays `n²` per chip, while an unsorted harvest pays 1 | nested loops, a sorting algorithm with `swap` |
-| **Final Assembly** | Orders arrive as dicts of parts. `assemble()` consumes them and pays Computers, the top currency. Bigger orders pay more | dicts, `for key, value in d.items()`, planning |
+| **Final Assembly** | Orders arrive as dicts of parts. `assemble()` consumes them and pays 1 Computer, the top currency. Orders grow over time (amended: each order pays 1 computer; the win counts orders completed) | dicts, `for key, value in d.items()`, planning |
 
 The exact numbers (tick costs, grow times, yields, prices) live in one data file (`src/python/game/balance.py`)
 so they can be tuned in one place.
@@ -105,7 +108,7 @@ Each unlock has a cost in parts, a list of prerequisites and a help page. Rough 
 12. **Final Assembly** (`get_order`, `assemble`)
 13. **Classes** (`class`, `__init__`, methods, inheritance). Nothing forces them, but the Final Assembly help page
     suggests an `OrderPlanner` class, and there's an optional challenge
-14. Throughout: Speed II–V, grid sizes up to 8×8 per floor, and **Turbo** (no animation)
+14. Throughout: Speed II–V and grid sizes up to 8×8 per floor (Turbo was removed, see the Pacing amendment)
 
 Built-ins that come with each feature (`len`, `range`, `min`, `max`, `abs`, `str`, `int`, `list`, `dict`,
 `set`, `sorted`…) are grouped with the unlock they belong to. The `math` and `random` imports

@@ -248,21 +248,40 @@ class World:
         }
 
     @classmethod
+    def load(cls, state):
+        """(world, ok). A save that can't be read gives a fresh world and ok=False instead of crashing."""
+        from .unlocks import BY_ID
+        try:
+            world = cls.from_state(state)
+        except (KeyError, TypeError, ValueError, IndexError, AttributeError):
+            return cls(seed=1), False
+        world.unlocks = {u for u in world.unlocks if u in BY_ID}   # upgrades removed in newer versions
+        return world, True
+
+    @classmethod
     def from_state(cls, state):
         w = cls.__new__(cls)
-        w.seed = state["seed"]
-        w.rng = random.Random()
-        version, internal, gauss = state["rng"]
-        w.rng.setstate((version, tuple(internal), gauss))
-        w.clock = state["clock"]
-        w.inventory = {p: state["inventory"].get(p, 0) for p in PARTS}
-        w.unlocks = set(state["unlocks"])
-        w.speed_level = state["speed_level"]
+        w.seed = state.get("seed", 1)
+        w.rng = random.Random(w.seed)
+        if state.get("rng"):
+            version, internal, gauss = state["rng"]
+            w.rng.setstate((version, tuple(internal), gauss))
+        w.clock = int(state.get("clock", 0))
+        w.inventory = {p: int(state["inventory"].get(p, 0)) for p in PARTS}
+        w.unlocks = set(state.get("unlocks", []))
+        w.speed_level = min(int(state.get("speed_level", 0)), len(B.SPEEDS) - 1)
         w.floors = {name: {"size": f["size"], "grid": [[Tile.from_json(t) for t in col] for col in f["grid"]]}
-                    for name, f in state["floors"].items()}
-        w.floor = state["floor"]
-        w.x = state["x"]
-        w.y = state["y"]
-        w.order = dict(state["order"]) if state["order"] else None
-        w.orders_done = state["orders_done"]
+                    for name, f in state["floors"].items() if name in FLOORS}
+        w.floor = state.get("floor", "RAM")
+        if "RAM" not in w.floors or w.floor not in w.floors:
+            raise ValueError("save has no usable floors")
+        for f in w.floors.values():
+            if len(f["grid"]) != f["size"] or any(len(col) != f["size"] for col in f["grid"]):
+                raise ValueError("save has a broken grid")
+        w.x = int(state.get("x", 0)) % w.size()
+        w.y = int(state.get("y", 0)) % w.size()
+        w.order = dict(state["order"]) if state.get("order") else None
+        w.orders_done = int(state.get("orders_done", 0))
+        if "ASSEMBLY" in w.floors and w.order is None:
+            w.new_order()
         return w

@@ -52,7 +52,7 @@ export function FloorView({ floor, world, animMs, locked, lockedBy }: Props) {
 }
 
 function AssemblyView({ world }: { world: WorldState }) {
-  const computers = world.inventory.COMPUTER ?? 0;
+  const computers = world.orders_done;  // spending computers on upgrades must not lower this
   return (
     <div class="assembly">
       <p class="assembly-drone">{world.floor === "ASSEMBLY" ? "🤖 The drone is at the assembly bench." : "The drone is on another floor."}</p>
