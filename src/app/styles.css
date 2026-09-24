@@ -1,4 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap");
 
 :root {
   --bg: #12151c;
@@ -23,7 +22,7 @@
   --bin-ok: #1f6f4c;
   --bin-bad: #7a2630;
   --radius: 12px;
-  --mono: "JetBrains Mono", ui-monospace, monospace;
+  --mono: ui-monospace, "Cascadia Code", Menlo, monospace;
   color-scheme: dark;
 }
 
@@ -32,7 +31,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font: 16px/1.6 "Space Grotesk", system-ui, sans-serif;
+  font: 16px/1.6 system-ui, "Segoe UI", Roboto, sans-serif;
 }
 a { color: var(--accent); }
 code, pre { font-family: var(--mono); }
@@ -84,7 +83,7 @@ code, pre { font-family: var(--mono); }
 @keyframes slide-down { from { transform: translateY(40%); opacity: 0; } to { transform: none; opacity: 1; } }
 
 .floor-svg { display: block; width: 100%; height: auto; }
-.floor-sign { fill: var(--text); font: 700 20px "Space Grotesk", sans-serif; }
+.floor-sign { fill: var(--text); font: 700 20px system-ui, sans-serif; }
 .screen-text { fill: #2d4a2d; font: 600 17px var(--mono); }
 .screen-text.on { fill: #6dff8a; }
 .machine { cursor: default; }
@@ -96,13 +95,13 @@ code, pre { font-family: var(--mono); }
 .machine.current .machine-body { stroke-width: 4; filter: drop-shadow(0 0 8px var(--floor)); }
 .machine:focus-visible .machine-body { stroke: var(--accent); stroke-width: 4; }
 .machine-day { fill: var(--muted); font: 600 13px var(--mono); }
-.machine-name { fill: var(--text); font: 700 15px "Space Grotesk", sans-serif; }
-.machine-state { fill: var(--floor); font: 600 13px "Space Grotesk", sans-serif; }
+.machine-name { fill: var(--text); font: 700 15px system-ui, sans-serif; }
+.machine-state { fill: var(--floor); font: 600 13px system-ui, sans-serif; }
 @keyframes dash { to { stroke-dashoffset: -28; } }
-.bin-text { fill: #fff; font: 700 15px "Space Grotesk", sans-serif; }
-.bin-sub { fill: #d6ffe9; font: 12px "Space Grotesk", sans-serif; }
+.bin-text { fill: #fff; font: 700 15px system-ui, sans-serif; }
+.bin-sub { fill: #d6ffe9; font: 12px system-ui, sans-serif; }
 .part-label { fill: #0d1117; font: 700 11px var(--mono); }
-.locked-text { fill: #fff; font: 700 26px "Space Grotesk", sans-serif; }
+.locked-text { fill: #fff; font: 700 26px system-ui, sans-serif; }
 .darkness { transition: opacity 0.8s; }
 
 /* Day tabs */
