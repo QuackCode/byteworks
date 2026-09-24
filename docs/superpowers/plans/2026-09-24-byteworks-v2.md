@@ -3423,7 +3423,7 @@ Stop the preview and dev servers and close the tab afterwards.
 
 - [ ] **Step 5: Update the project memory**
 
-Rewrite the project notes so they describes v2: a TFWR-style automation game, core Python only, and the key paths (`src/python/game/`, `tests/test_progress.py`, `balance.py`). Keep the privacy note (only touch `~/projects/byteworks`). Update its line in `MEMORY.md` to match.
+Rewrite the project notes so they describe v2: a TFWR-style automation game, core Python only, and the key paths (`src/python/game/`, `tests/test_progress.py`, `balance.py`). Keep the privacy note (only touch `~/projects/byteworks`). Update its line in `MEMORY.md` to match.
 
 - [ ] **Step 6: Commit**
 
