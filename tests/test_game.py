@@ -407,5 +407,11 @@ class SandboxTests(unittest.TestCase):
         self.assertTrue(run_snippet("print(nope)")["error"].startswith("Line 1: NameError"))
 
 
+class ConstantsTests(unittest.TestCase):
+    def test_win_constant_matches(self):
+        floors_ts = (Path(__file__).resolve().parent.parent / "src" / "floors.ts").read_text()
+        self.assertIn(f"export const WIN_COMPUTERS = {B.WIN_COMPUTERS};", floors_ts)
+
+
 if __name__ == "__main__":
     unittest.main()

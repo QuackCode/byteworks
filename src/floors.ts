@@ -1,20 +1,17 @@
-export interface Floor {
-  id: number;
-  label: string; // shown on the elevator buttons
-  name: string;
-  part: string;
-  icon: string;
-  color: string;
-}
+export interface FloorInfo { id: string; label: string; name: string; icon: string; color: string; unlock: string | null }
 
-// One floor per computer part. Each level's meta.json says which floor it belongs to.
-export const FLOORS: Floor[] = [
-  { id: 0, label: "G", name: "Control Room", part: "Power & control", icon: "⚡", color: "#f5b841" },
-  { id: 1, label: "1", name: "RAM Floor", part: "RAM sticks", icon: "🧠", color: "#4cc38a" },
-  { id: 2, label: "2", name: "CPU Floor", part: "Processors", icon: "🔲", color: "#5aa9ff" },
-  { id: 3, label: "3", name: "Storage Floor", part: "SSDs", icon: "💾", color: "#b18cff" },
-  { id: 4, label: "4", name: "Motherboard Floor", part: "Motherboards", icon: "🟩", color: "#3fd0c9" },
-  { id: 5, label: "5", name: "GPU Floor", part: "Graphics cards", icon: "🎮", color: "#ff7a59" },
-  { id: 6, label: "6", name: "Shipping & Orders", part: "Orders & delivery", icon: "📦", color: "#e2c275" },
-  { id: 7, label: "7", name: "Final Assembly", part: "Complete computers", icon: "🖥️", color: "#ff5c8a" },
+// Bottom to top. `unlock` is the upgrade that opens the floor (null = open from the start).
+export const FLOORS: FloorInfo[] = [
+  { id: "RAM", label: "G", name: "RAM Floor", icon: "🧠", color: "#4cc38a", unlock: null },
+  { id: "CPU", label: "1", name: "CPU Floor", icon: "🔲", color: "#5aa9ff", unlock: "floor_cpu" },
+  { id: "SSD", label: "2", name: "SSD Floor", icon: "💾", color: "#b18cff", unlock: "floor_ssd" },
+  { id: "BOARD", label: "3", name: "Motherboard Floor", icon: "🟩", color: "#3fd0c9", unlock: "floor_board" },
+  { id: "GPU", label: "4", name: "GPU Floor", icon: "🎮", color: "#ff7a59", unlock: "floor_gpu" },
+  { id: "ASSEMBLY", label: "5", name: "Final Assembly", icon: "🖥️", color: "#ff5c8a", unlock: "floor_assembly" },
 ];
+
+export const PART_ICON: Record<string, string> = { RAM: "🧠", CPU: "🔲", SSD: "💾", BOARD: "🟩", GPU: "🎮", COMPUTER: "🖥️" };
+export const PARTS_ORDER = ["RAM", "CPU", "SSD", "BOARD", "GPU", "COMPUTER"];
+
+// Keep equal to WIN_COMPUTERS in src/python/game/balance.py (a Python test checks this).
+export const WIN_COMPUTERS = 10;
