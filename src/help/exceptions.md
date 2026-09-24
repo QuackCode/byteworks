@@ -68,13 +68,20 @@ except ValueError as err:
 
 ```py
 goto_floor(Floor.BOARD)
+row = 0
 while True:
     try:
         if can_harvest():
             harvest()
     except FaultyBoardError:
         place(Part.BOARD)
-    move(North)
+    if row < 2:
+        move(North)
+        row = row + 1
+    else:
+        move(South)
+        move(South)
+        row = 0
 ```
 
 ⚠️ ByteWorks doesn't allow a bare `except:`. Always name the error you expect. A bare `except:` would also catch the **Stop** button!

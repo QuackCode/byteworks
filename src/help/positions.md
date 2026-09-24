@@ -46,8 +46,13 @@ for col in range(size):
     for row in range(size):
         if can_harvest():
             harvest()
-        move(North)
-    move(East)
+        if row < size - 1:
+            if col % 2 == 0:
+                move(North)
+            else:
+                move(South)
+    if col < size - 1:
+        move(East)
 ```
 
 Using `get_world_size()` means your sweep keeps working when you buy a bigger grid.

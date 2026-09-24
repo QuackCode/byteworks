@@ -51,7 +51,9 @@ browser with an export/import save code, a floor lift with ▲/▼ buttons and a
   upgrades, and the balance guarantees no upgrade (or computer) needs more than 5 minutes of waiting
   (enforced by `tests/test_progress.py`).
 - **Floors**: each floor has its own `n × n` grid (it starts at 3, and grid upgrades apply per floor). The grid
-  wraps around at the edges, as in TFWR. There's one drone. It has a position and a current floor.
+  has walls (amended 2026-09-24, user request: no wrap-around). Moving into a wall leaves the drone in place,
+  stuns it for 1 real second (`STUN_MS`, at every Drone Speed) and prints "Bonk!", and `move()` returns False.
+  There's one drone. It has a position and a current floor.
 - **Inventory**: one global dict of part → count.
 - **Randomness**: seeded per save, so a replay is reproducible for tests.
 
@@ -60,7 +62,7 @@ browser with an export/import save code, a floor lift with ▲/▼ buttons and a
 | Function | Unlock | Notes |
 |---|---|---|
 | `harvest()` | start | collects the part under the drone if it's ready |
-| `move(dir)` | start | `North/East/South/West`, wraps at the edges |
+| `move(dir)` | start | `North/East/South/West`. Walls: bumping one stuns for 1 s and returns False |
 | `print(...)` | start | writes to the console (costs a few ticks, as in TFWR) |
 | `can_harvest()` | Conditionals | whether the part under the drone is ready |
 | `place(Part.X)` | CPU floor | starts building a part on an empty tile, paying its cost |

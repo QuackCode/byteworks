@@ -19,7 +19,7 @@ describe("tile looks", () => {
 describe("drone movement", () => {
   const at = (x: number, y: number, floor = "RAM") => ({ floor, x, y });
   it("slides one step", () => expect(moveDuration(at(0, 0), at(1, 0), 200)).toBe(200));
-  it("jumps when wrapping round an edge", () => expect(moveDuration(at(2, 0), at(0, 0), 200)).toBe(0));
+  it("jumps when moving more than one square", () => expect(moveDuration(at(2, 0), at(0, 0), 200)).toBe(0));
   it("jumps when changing floor or on first draw", () => {
     expect(moveDuration(at(0, 0), at(0, 0, "CPU"), 200)).toBe(0);
     expect(moveDuration(null, at(0, 0), 200)).toBe(0);

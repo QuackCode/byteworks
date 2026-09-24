@@ -11,7 +11,7 @@ export function lookOf(tile: Tile, clock: number): TileLook {
   return { part, ready, progress, faulty: part === "BOARD" && ready && faulty, score: part === "GPU" ? score : null };
 }
 
-/** How long the drone should glide to its new spot: no glide across a wrapped edge or a floor change. */
+/** How long the drone should glide to its new spot: no glide when it jumps (lift, loaded save) or changes floor. */
 export function moveDuration(prev: DronePos | null, next: DronePos, animMs: number): number {
   if (!prev || prev.floor !== next.floor) return 0;
   if (Math.abs(prev.x - next.x) > 1 || Math.abs(prev.y - next.y) > 1) return 0;

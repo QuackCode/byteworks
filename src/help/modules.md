@@ -11,14 +11,23 @@ A module is just a file full of code (usually functions) that other files can **
 ```py
 # helpers.py
 def tend(part):
-    for i in range(9):
-        if can_harvest():
-            harvest()
-        if get_part() == None:
-            place(part)
-        move(North)
-        if i % 3 == 2:
+    for col in range(3):
+        for row in range(3):
+            if can_harvest():
+                harvest()
+            if get_part() == None:
+                place(part)
+            if row < 2:
+                if col % 2 == 0:
+                    move(North)
+                else:
+                    move(South)
+        if col < 2:
             move(East)
+    move(West)
+    move(West)
+    move(South)
+    move(South)
 ```
 
 ```py

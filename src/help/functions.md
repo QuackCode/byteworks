@@ -61,8 +61,17 @@ def tend(part):
                 harvest()
             if get_part() == None:
                 place(part)
-            move(North)
-        move(East)
+            if row < 2:
+                if col % 2 == 0:
+                    move(North)
+                else:
+                    move(South)
+        if col < 2:
+            move(East)
+    move(West)
+    move(West)
+    move(South)
+    move(South)
 
 while True:
     goto_floor(Floor.RAM)
@@ -71,7 +80,7 @@ while True:
     tend(Part.CPU)
 ```
 
-(On the RAM floor every tile already has RAM, so `place` never runs there.)
+`tend` walks a snake route and finishes back in the corner where it started, so it's ready for the next floor. (On the RAM floor every tile already has RAM, so `place` never runs there.)
 
 ## `global`
 

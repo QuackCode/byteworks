@@ -12,6 +12,7 @@ Motherboards are the heart of every computer, and the trickiest part to build.
 
 ```py
 goto_floor(Floor.BOARD)
+row = 0
 while True:
     if is_faulty():
         place(Part.BOARD)
@@ -19,7 +20,13 @@ while True:
         harvest()
     if get_part() == None:
         place(Part.BOARD)
-    move(North)
+    if row < 2:
+        move(North)
+        row = row + 1
+    else:
+        move(South)
+        move(South)
+        row = 0
 ```
 
 `elif` matters here: never harvest a board you just found was faulty.

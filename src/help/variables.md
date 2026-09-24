@@ -57,6 +57,8 @@ print(parts)
 while num_items(Part.RAM) < 50:
     harvest()
     move(North)
+    harvest()
+    move(South)
 print("50 RAM!")
 ```
 
@@ -67,6 +69,8 @@ laps = 0
 while True:
     harvest()
     move(North)
+    harvest()
+    move(South)
     laps = laps + 1
     print(laps)
 ```

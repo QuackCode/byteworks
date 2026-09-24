@@ -13,12 +13,19 @@ def can_build_ssd():
     return num_items(Part.RAM) >= 1 and num_items(Part.CPU) >= 1
 
 goto_floor(Floor.SSD)
+row = 0
 while True:
     if can_harvest():
         harvest()
     if get_part() == None and can_build_ssd():
         place(Part.SSD)
-    move(North)
+    if row < 2:
+        move(North)
+        row = row + 1
+    else:
+        move(South)
+        move(South)
+        row = 0
 ```
 
 ## Keeping every floor busy

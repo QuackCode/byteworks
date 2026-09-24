@@ -1,6 +1,7 @@
 """Every number that decides how ByteWorks feels. Tune here, and nowhere else."""
 
 MS_PER_TICK = 2          # real milliseconds per game tick at speed x1 (a 100-tick move = 0.2 s)
+STUN_MS = 1000           # walking into a wall stuns the drone for 1 real second (at every Drone Speed)
 START_SIZE = 3
 MAX_SIZE = 8
 

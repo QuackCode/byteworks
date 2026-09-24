@@ -22,7 +22,11 @@ move(North)
 harvest()
 ```
 
-Press **▶ Run** (or **Ctrl + Enter**) and watch the drone. When it reaches an edge of the floor, it wraps round to the other side.
+Press **▶ Run** (or **Ctrl + Enter**) and watch the drone.
+
+## Mind the walls! 💫
+
+Every floor has walls round the edge. If the drone tries to move into a wall, it **bonks**: it stays where it is and is **stunned for 1 second**. Every bonk costs another second, so plan a route that turns round before the edge instead of charging into it. The drone starts in the bottom-left corner.
 
 ## Comments
 

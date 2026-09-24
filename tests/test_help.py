@@ -9,6 +9,8 @@ sys.path.insert(0, str(ROOT / "src" / "python"))
 from game import unlocks as U  # noqa: E402
 from game.gating import check  # noqa: E402
 from game.sandbox import run_snippet  # noqa: E402
+from game.runner import run_program  # noqa: E402
+from game.world import World  # noqa: E402
 
 HELP = ROOT / "src" / "help"
 FENCE = "`" * 3
@@ -45,6 +47,21 @@ class HelpPageTests(unittest.TestCase):
                 else:
                     problems = check(code, unlocked, "main.py", {"helpers"})  # examples may import a window called helpers
                     self.assertEqual(problems, [], f"{path.name} drone example uses locked things:\n{code}")
+
+    def test_drone_examples_never_bonk_a_wall(self):
+        for path in sorted(HELP.glob("*.md")):
+            for kind, code in BLOCK.findall(path.read_text()):
+                if kind != "py" or "import helpers" in code:
+                    continue
+                world = World(seed=1)
+                world.inventory.update({p: 10**6 for p in world.inventory})
+                for u in U.UNLOCKS:              # list order is a valid buying order
+                    if u.id in owned_at(path.stem):
+                        U.buy(world, u.id)
+                bonks = []
+                run_program(world, {"main.py": code}, max_ticks=20_000,
+                            on_print=lambda text: text.startswith("Bonk") and bonks.append(text))
+                self.assertEqual(bonks, [], f"{path.name} example walks into a wall:\n{code}")
 
 
 if __name__ == "__main__":

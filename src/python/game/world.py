@@ -1,5 +1,7 @@
 """The ByteWorks factory: floors of tiles, one drone, an inventory and a game clock.
 
+Floors have walls: moving off an edge is blocked (the Api stuns the drone for it).
+
 Time only moves when the drone acts (the Api adds ticks), so everything is deterministic.
 Grids are indexed grid[x][y]; y = 0 is the South edge and North is +y.
 """
@@ -48,6 +50,7 @@ class World:
         self.y = 0
         self.order = None
         self.orders_done = 0
+        self.bumped = False   # True right after the drone walked into a wall (drawn as 💫)
         self.open_floor("RAM")
 
     # ---------------------------------------------------------------- floors
@@ -92,9 +95,11 @@ class World:
         if direction not in DIRS:
             raise ValueError("move() needs a direction: North, East, South or West")
         dx, dy = DIRS[direction]
+        nx, ny = self.x + dx, self.y + dy
         n = self.size()
-        self.x = (self.x + dx) % n
-        self.y = (self.y + dy) % n
+        if not (0 <= nx < n and 0 <= ny < n):
+            return False          # a wall: the drone stays where it is
+        self.x, self.y = nx, ny
         return True
 
     def harvest(self):
@@ -244,6 +249,7 @@ class World:
             "y": self.y,
             "order": dict(self.order) if self.order else None,
             "orders_done": self.orders_done,
+            "bumped": self.bumped,
             "rng": [version, list(internal), gauss],
         }
 
@@ -282,6 +288,7 @@ class World:
         w.y = int(state.get("y", 0)) % w.size()
         w.order = dict(state["order"]) if state.get("order") else None
         w.orders_done = int(state.get("orders_done", 0))
+        w.bumped = bool(state.get("bumped", False))
         if "ASSEMBLY" in w.floors and w.order is None:
             w.new_order()
         return w

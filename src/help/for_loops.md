@@ -42,8 +42,17 @@ while True:
         for row in range(3):
             if can_harvest():
                 harvest()
-            move(North)
-        move(East)
+            if row < 2:
+                if col % 2 == 0:
+                    move(North)
+                else:
+                    move(South)
+        if col < 2:
+            move(East)
+    move(West)
+    move(West)
+    move(South)
+    move(South)
 ```
 
 ## Extras

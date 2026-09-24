@@ -46,12 +46,19 @@ print(status)
 Checking is almost free: it takes 1 tick, while a wasted harvest takes 100.
 
 ```py
+row = 0
 while True:
     if can_harvest():
         harvest()
-    move(North)
+    if row < 2:
+        move(North)
+        row = row + 1
+    else:
+        move(South)
+        move(South)
+        row = 0
 ```
 
 ## Try this
 
-Only move East after checking a whole column. Then compare how much RAM you get per minute with and without `can_harvest()`.
+Turn this into a whole-floor snake route: after each column, step East instead of going back down. Then compare how much RAM you get per minute with and without `can_harvest()`.

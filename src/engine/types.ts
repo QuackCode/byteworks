@@ -3,7 +3,7 @@ export interface FloorState { size: number; grid: Tile[][] }            // grid[
 export interface WorldState {
   seed: number; clock: number; inventory: Record<string, number>; unlocks: string[]; speed_level: number;
   floors: Record<string, FloorState>; floor: string; x: number; y: number;
-  order: Record<string, number> | null; orders_done: number; rng: unknown;
+  order: Record<string, number> | null; orders_done: number; bumped?: boolean; rng: unknown;
 }
 export interface UnlockInfo {
   id: string; title: string; cost: Record<string, number>; requires: string[]; summary: string;

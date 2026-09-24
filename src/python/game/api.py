@@ -28,9 +28,11 @@ class Api:
         self.on_print = on_print or (lambda text: None)
         self.limit = None if max_ticks is None else world.clock + max_ticks
 
-    def _spend(self, action, ticks=None):
+    def _spend(self, action, ticks=None, bumped=False):
         ticks = B.ACTION_TICKS[action] if ticks is None else ticks
         self.world.clock += ticks
+        if action != "sense":
+            self.world.bumped = bumped
         ms = ticks * B.MS_PER_TICK / B.SPEEDS[self.world.speed_level]
         if self.on_change and action != "sense":   # sensing changes nothing on screen
             self.on_change(ms)
@@ -56,9 +58,14 @@ class Api:
             self._spend("harvest")
 
     def move(self, direction):
-        self.world.move(direction)
-        self._spend("move")
-        return True
+        if self.world.move(direction):
+            self._spend("move")
+            return True
+        # Walked into a wall: stunned for 1 real second, whatever the Drone Speed
+        self.on_print(f"Bonk! The drone hit the {direction} wall and is stunned for 1 second.")
+        stun_ticks = round(B.STUN_MS * B.SPEEDS[self.world.speed_level] / B.MS_PER_TICK)
+        self._spend("move", stun_ticks, bumped=True)
+        return False
 
     def print(self, *values, sep=" ", end="\n"):
         text = (sep.join(str(v) for v in values) + end).rstrip("\n")

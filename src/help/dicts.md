@@ -40,18 +40,31 @@ for model in stock:
 A dict can say how many laps to spend on each floor:
 
 ```py
+def tend(part):
+    for col in range(3):
+        for row in range(3):
+            if can_harvest():
+                harvest()
+            if get_part() == None:
+                place(part)
+            if row < 2:
+                if col % 2 == 0:
+                    move(North)
+                else:
+                    move(South)
+        if col < 2:
+            move(East)
+    move(West)
+    move(West)
+    move(South)
+    move(South)
+
 plan = {Floor.RAM: 2, Floor.CPU: 1, Floor.SSD: 1}
 while True:
     for f in plan:
         goto_floor(f)
-        for lap in range(plan[f] * 9):
-            if can_harvest():
-                harvest()
-            if get_part() == None:
-                place(f)
-            move(North)
-            if lap % 3 == 2:
-                move(East)
+        for lap in range(plan[f]):
+            tend(f)
 ```
 
 ## Try this

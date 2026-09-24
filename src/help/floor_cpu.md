@@ -24,12 +24,19 @@ The lift takes 400 ticks, so don't ride it more than you need to. The ▲ ▼ bu
 
 ```py
 goto_floor(Floor.CPU)
+row = 0
 while True:
     if can_harvest():
         harvest()
     if get_part() == None:
         place(Part.CPU)
-    move(North)
+    if row < 2:
+        move(North)
+        row = row + 1
+    else:
+        move(South)
+        move(South)
+        row = 0
 ```
 
 `None` is Python's value for "nothing here".

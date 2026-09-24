@@ -128,6 +128,10 @@ code, pre { font-family: var(--mono); }
 .drone { transition-property: transform; transition-timing-function: linear; }
 .drone-ring { fill: #0008; stroke: var(--accent); stroke-width: 4; }
 .drone-icon { font-size: 40px; }
+.drone-body.bumped { animation: bonk 0.35s ease-in-out 2; transform-box: fill-box; transform-origin: center; }
+.drone-body.bumped .drone-ring { stroke: var(--bad); }
+.drone-stun { font-size: 26px; }
+@keyframes bonk { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 .floor-locked { min-height: 280px; display: grid; place-content: center; text-align: center; gap: 6px; color: var(--muted); }
 .floor-locked-icon { font-size: 3rem; }
 .assembly { padding: 8px 12px; }

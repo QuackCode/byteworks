@@ -43,8 +43,11 @@ export function FloorView({ floor, world, animMs, locked, lockedBy }: Props) {
       }))}
       {world.floor === floor.id && (
         <g class="drone" style={{ transform: `translate(${world.x * CELL}px, ${svgRow(world.y, n) * CELL}px)`, transitionDuration: `${duration}ms` }}>
-          <circle cx="50" cy="50" r="36" class="drone-ring" />
-          <text x="50" y="64" text-anchor="middle" class="drone-icon">🤖</text>
+          <g class={world.bumped ? "drone-body bumped" : "drone-body"}>
+            <circle cx="50" cy="50" r="36" class="drone-ring" />
+            <text x="50" y="64" text-anchor="middle" class="drone-icon">🤖</text>
+            {world.bumped && <text x="50" y="16" text-anchor="middle" class="drone-stun">💫</text>}
+          </g>
         </g>
       )}
     </svg>

@@ -45,12 +45,16 @@ class WorldCoreTests(unittest.TestCase):
         self.assertEqual(w.here().part, "RAM")
         self.assertTrue(w.is_ready(w.here()))
 
-    def test_move_wraps_around(self):
+    def test_move_into_wall_is_blocked(self):
         w = World()
-        w.move("West")
-        self.assertEqual((w.x, w.y), (B.START_SIZE - 1, 0))
-        w.move("South")
-        self.assertEqual((w.x, w.y), (B.START_SIZE - 1, B.START_SIZE - 1))
+        self.assertFalse(w.move("West"))           # (0, 0) is the South-West corner
+        self.assertFalse(w.move("South"))
+        self.assertEqual((w.x, w.y), (0, 0))
+        self.assertTrue(w.move("North"))
+        self.assertEqual((w.x, w.y), (0, 1))
+        for _ in range(B.START_SIZE):
+            w.move("East")
+        self.assertEqual(w.x, B.START_SIZE - 1)    # stopped at the East wall
 
     def test_move_rejects_bad_direction(self):
         with self.assertRaises(ValueError):
@@ -469,6 +473,42 @@ class ReviewFixTests(unittest.TestCase):
         self.assertTrue(ok)
         self.assertEqual(loaded.unlocks, {"loops"})
         self.assertEqual(loaded.orders_done, 0)
+
+
+class WallTests(unittest.TestCase):
+    def test_bumping_a_wall_stuns_for_one_real_second(self):
+        w = unlocked_world("loops")
+        paced, out = [], []
+        r = run_program(w, {"main.py": "move(West)\n"}, pace=paced.append, on_print=out.append)
+        self.assertTrue(r["ok"])
+        self.assertEqual((w.x, w.y), (0, 0))
+        self.assertAlmostEqual(sum(paced), B.STUN_MS)
+        self.assertTrue(any("Bonk" in line for line in out))
+        self.assertTrue(w.bumped)
+
+    def test_stun_stays_one_second_at_higher_drone_speed(self):
+        w = unlocked_world("loops", "speed1")
+        paced = []
+        run_program(w, {"main.py": "move(West)\n"}, pace=paced.append)
+        self.assertAlmostEqual(sum(paced), B.STUN_MS)
+
+    def test_every_bump_stuns_again(self):
+        w = unlocked_world("loops")
+        paced = []
+        run_program(w, {"main.py": "move(West)\nmove(West)\n"}, pace=paced.append)
+        self.assertAlmostEqual(sum(paced), 2 * B.STUN_MS)
+
+    def test_a_normal_move_clears_the_bump(self):
+        w = unlocked_world("loops")
+        run_program(w, {"main.py": "move(West)\nmove(North)\n"})
+        self.assertFalse(w.bumped)
+        self.assertEqual((w.x, w.y), (0, 1))
+
+    def test_move_returns_false_when_blocked(self):
+        w = unlocked_world("conditionals")
+        out = []
+        run_program(w, {"main.py": "if not move(South):\n    print('blocked')\n"}, on_print=out.append)
+        self.assertIn("blocked", out)
 
 
 if __name__ == "__main__":

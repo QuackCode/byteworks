@@ -8,6 +8,11 @@ Pressing **Run** over and over is tiring. A **loop** repeats code for you, so yo
 while True:
     harvest()
     move(North)
+    harvest()
+    move(North)
+    harvest()
+    move(South)
+    move(South)
 ```
 
 - `while` is followed by a **condition** and a colon `:`
@@ -18,7 +23,7 @@ Python only knows what's *inside* the loop by the indentation. When the indentat
 
 ## Sweeping more of the floor
 
-The floor wraps round, so moving North three times on a 3×3 floor brings you back to where you started. Add a `move(East)` to shift to the next column each time round:
+Watch out for the walls: on a 3×3 floor, a third `move(North)` in a row walks into the wall and stuns the drone. So go up the first column, step East, come down the next one, and so on (a **snake** route), then walk back to the corner so the loop can start again:
 
 ```py
 while True:
@@ -27,8 +32,22 @@ while True:
     harvest()
     move(North)
     harvest()
-    move(North)
     move(East)
+    harvest()
+    move(South)
+    harvest()
+    move(South)
+    harvest()
+    move(East)
+    harvest()
+    move(North)
+    harvest()
+    move(North)
+    harvest()
+    move(West)
+    move(West)
+    move(South)
+    move(South)
 ```
 
 ## `break` and `continue`
@@ -57,4 +76,4 @@ while True:
 
 ## Try this
 
-Write a loop that sweeps the whole 3×3 RAM floor forever. Then buy **Drone Speed 1** to make it faster.
+Write a loop that sweeps the whole 3×3 RAM floor forever **without a single bonk**. Then buy **Drone Speed 1** to make it faster.

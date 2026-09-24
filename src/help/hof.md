@@ -59,18 +59,30 @@ print(add(2, 3))
 ## Visit the scarcest part first
 
 ```py
+def tend(part):
+    for col in range(3):
+        for row in range(3):
+            if can_harvest():
+                harvest()
+            if get_part() == None:
+                place(part)
+            if row < 2:
+                if col % 2 == 0:
+                    move(North)
+                else:
+                    move(South)
+        if col < 2:
+            move(East)
+    move(West)
+    move(West)
+    move(South)
+    move(South)
+
 floors = [Floor.RAM, Floor.CPU, Floor.SSD]
 while True:
     for f in sorted(floors, key=lambda f: num_items(f)):
         goto_floor(f)
-        for i in range(9):
-            if can_harvest():
-                harvest()
-            if get_part() == None:
-                place(f)
-            move(North)
-            if i % 3 == 2:
-                move(East)
+        tend(f)
 ```
 
 ## Try this
