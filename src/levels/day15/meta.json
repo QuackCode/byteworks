@@ -1,0 +1,14 @@
+{
+  "day": 15,
+  "title": "The Crash Report Desk",
+  "topic": "Python error types: reading and fixing tracebacks",
+  "floor": 3,
+  "machine": "Crash Report Desk",
+  "briefing": "Uh oh. The night shift wrote a script to print the SSD stock report, and it crashes every single time. It's riddled with bugs, and each one is a different type of Python error. Run it, read the error, fix that line, and run it again until the report prints cleanly. Every programmer spends half their life doing exactly this.",
+  "hints": [
+    "Run the code first! The error message tells you the LINE number and the error TYPE. Fix one bug at a time, then run again.",
+    "TypeError on line 9: you can't + a string and a number, so use str(...) or an f-string. IndexError: the last item is at position len - 1. KeyError: keys are case-sensitive. NameError: check the spelling.",
+    "Fixes: \"Drives: \" + str(drive_count) / ssds[-1] / last[\"serial\"] / total += s[\"gb\"] / int(\"2000\") / ssds.append(...)"
+  ],
+  "bonus": "Write a line that causes a ZeroDivisionError and one that causes a ModuleNotFoundError. Read each message carefully."
+}

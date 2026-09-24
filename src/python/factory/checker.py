@@ -7,7 +7,10 @@ A level's check.py defines:
 import contextlib
 import io
 import json
+import os
+import shutil
 import sys
+import tempfile
 import traceback
 
 from .core import FactoryError, world
@@ -42,6 +45,9 @@ EXPLAIN = {
     "AttributeError": "That thing doesn't have the method or attribute you asked for.",
     "ZeroDivisionError": "You divided by zero. Even a factory can't do that!",
     "FactoryError": "A machine refused to do that.",
+    "ModuleNotFoundError": "Python can't find that module. Check the spelling, or install it first.",
+    "FileNotFoundError": "There's no file with that name. Check the spelling (and the .txt/.csv ending).",
+    "RecursionError": "A function kept calling itself forever.",
 }
 
 
@@ -56,6 +62,10 @@ def friendly_error(exc):
     else:
         detail = str(exc)
     hint = EXPLAIN.get(name, "")
+    frames = list(traceback.walk_tb(exc.__traceback__))
+    if frames and line and frames[-1][0].f_code.co_filename not in (USER_FILE, "<string>") \
+            and "factory" in frames[-1][0].f_code.co_filename:
+        hint = "A factory machine raised this error when your code called it on this line."
     return f"{where}{name}: {detail}\n{hint}".strip()
 
 
@@ -71,12 +81,39 @@ def _make_input(answers):
     return fake_input
 
 
+@contextlib.contextmanager
+def _sandbox():
+    """Each run gets its own empty folder, so file-handling levels start fresh."""
+    old = os.getcwd()
+    tmp = tempfile.mkdtemp(prefix="byteworks_")
+    os.chdir(tmp)
+    try:
+        yield tmp
+    finally:
+        os.chdir(old)
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def _snapshot(folder):
+    files = {}
+    for name in os.listdir(folder):
+        path = os.path.join(folder, name)
+        if os.path.isfile(path):
+            try:
+                with open(path, encoding="utf-8") as f:
+                    files[name] = f.read()
+            except (OSError, UnicodeDecodeError):
+                files[name] = None
+    return files
+
+
 class Run:
-    def __init__(self, ns, stdout, error, events):
+    def __init__(self, ns, stdout, error, events, files=None):
         self.ns = ns
         self.stdout = stdout
         self.error = error
         self.events = events
+        self.files = files or {}
 
     @property
     def lines(self):
@@ -96,17 +133,19 @@ class Ctx:
     def run(self, seed=1, inputs=(), setup_args=None):
         world.reset(seed)
         ns = {"__name__": "__main__", "input": _make_input(inputs)}
-        if hasattr(self.level, "setup"):
-            ns.update(self.level.setup(world, **(setup_args or {})))
         out = io.StringIO()
         error = None
-        try:
-            compiled = compile(self.code, USER_FILE, "exec")
-            with contextlib.redirect_stdout(out):
-                exec(compiled, ns)
-        except Exception as exc:  # the player's code crashed: explain it
-            error = friendly_error(exc)
-        run = Run(ns, out.getvalue()[:MAX_OUTPUT], error, list(world.events))
+        with _sandbox() as folder:
+            if hasattr(self.level, "setup"):
+                ns.update(self.level.setup(world, **(setup_args or {})))
+            try:
+                compiled = compile(self.code, USER_FILE, "exec")
+                with contextlib.redirect_stdout(out):
+                    exec(compiled, ns)
+            except Exception as exc:  # the player's code crashed: explain it
+                error = friendly_error(exc)
+            files = _snapshot(folder)
+        run = Run(ns, out.getvalue()[:MAX_OUTPUT], error, list(world.events), files)
         if self.first is None:
             self.first = run
         return run
@@ -114,7 +153,8 @@ class Ctx:
     def fresh(self, seed=1, setup_args=None):
         """The untouched starting values for a seed (the player's run may have changed them)."""
         world.reset(seed)
-        values = self.level.setup(world, **(setup_args or {}))
+        with _sandbox():
+            values = self.level.setup(world, **(setup_args or {}))
         world.reset(seed)
         return values
 
@@ -172,12 +212,13 @@ def run_snippet(code):
     ns = {"__name__": "__main__", "input": _make_input([])}
     out = io.StringIO()
     error = None
-    try:
-        compiled = compile(code, USER_FILE, "exec")
-        with contextlib.redirect_stdout(out):
-            exec(compiled, ns)
-    except Exception as exc:
-        error = friendly_error(exc)
+    with _sandbox():
+        try:
+            compiled = compile(code, USER_FILE, "exec")
+            with contextlib.redirect_stdout(out):
+                exec(compiled, ns)
+        except Exception as exc:
+            error = friendly_error(exc)
     return json.dumps({"stdout": out.getvalue()[:MAX_OUTPUT], "error": error})
 
 

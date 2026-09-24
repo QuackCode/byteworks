@@ -1,0 +1,14 @@
+{
+  "day": 20,
+  "title": "The Parts Installer",
+  "topic": "PIP: installing packages and requirements.txt",
+  "floor": 4,
+  "machine": "Parts Installer",
+  "briefing": "Why build every tool yourself when thousands of programmers share theirs for free? There's a package called boardcheck that tests motherboards in one line. Install it with pip, use it, and write down exactly what you installed, so anyone can rebuild our setup.",
+  "hints": [
+    "pip.install(\"boardcheck==2.1\") installs a specific version. Only AFTER that can you import boardcheck. Try printing pip.list() to see what's installed.",
+    "boardcheck.scan(board) returns \"PASS\" or \"FAIL\". A dict comprehension builds results: {b[\"serial\"]: boardcheck.scan(b) for b in boards}. pip.freeze() returns the requirements text.",
+    "pip.install(\"boardcheck==2.1\") / import boardcheck / results = {b[\"serial\"]: boardcheck.scan(b) for b in boards} / pip.install(\"rgbglow\") / pip.uninstall(\"rgbglow\") / with open(\"requirements.txt\", \"w\") as f: f.write(pip.freeze())"
+  ],
+  "bonus": "Install rgbglow again and call rgbglow.glow(\"blue\"). Then try installing a package that doesn't exist and read the error."
+}

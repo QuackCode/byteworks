@@ -1,0 +1,14 @@
+{
+  "day": 16,
+  "title": "The Shift Clock",
+  "topic": "Dates and times with datetime",
+  "floor": 3,
+  "machine": "Shift Clock",
+  "briefing": "Every SSD gets a manufacture timestamp, a 3-year warranty and a 48-hour shipping deadline. Customers also keep asking 'how old is my drive?'. The shift clock needs to turn timestamps into real dates and do maths with them. Finish this and the Storage floor is done!",
+  "hints": [
+    "datetime.strptime(text, \"%Y-%m-%d %H:%M\") turns text into a datetime. timedelta(days=..., hours=...) is a length of time you can add to it.",
+    ".strftime(\"%d/%m/%Y\") turns a datetime back into text. Subtracting two datetimes gives a timedelta, and its .days tells you how many whole days. .hour gives the hour (0-23).",
+    "made = datetime.strptime(made_at, \"%Y-%m-%d %H:%M\") / warranty_ends = made + timedelta(days=1095) / ship_by = made + timedelta(hours=48) / label_date = made.strftime(\"%d/%m/%Y\") / age_days = (inspected - made).days / night_shift = made.hour >= 22 or made.hour < 6"
+  ],
+  "bonus": "Print today's date with datetime.now(), and work out how many days are left until your next birthday."
+}

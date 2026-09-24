@@ -30,3 +30,39 @@ class Press:
 
     def __repr__(self):
         return f"<CPU press: {len(self._chips) - self.stamped} cycles of power left>"
+
+
+def make_ssd(world, dead=None):
+    rng = world.rng
+    if dead is None:
+        dead = rng.random() < 0.3
+    return {
+        "serial": world.serial("SSD"),
+        "gb": rng.choice([256, 512, 1000, 2000, 4000]),
+        "health": rng.randint(0, 19) if dead else rng.randint(20, 100),
+    }
+
+
+def make_board(world, fault=None):
+    """fault: None, "blown" (ValueError when installed) or "no_bios" (KeyError when installed)."""
+    rng = world.rng
+    board = {"serial": world.serial("MB"), "socket": rng.choice(["AM5", "LGA1851"]), "volts": round(rng.uniform(1.0, 1.3), 2)}
+    if fault == "blown":
+        board["volts"] = round(rng.uniform(1.6, 2.4), 2)
+    if fault != "no_bios":
+        board["bios"] = f"v{rng.randint(1, 9)}.{rng.randint(0, 9)}"
+    return board
+
+
+class BoardTester:
+    """Installs motherboards. Faulty boards raise errors, just like real hardware 'raises' smoke."""
+
+    def __init__(self):
+        self.installed = []
+
+    def install(self, board):
+        if board["volts"] > 1.5:
+            raise ValueError(f"{board['serial']} blew a capacitor at {board['volts']}V!")
+        bios = board["bios"]  # KeyError if the BIOS chip is missing
+        self.installed.append(board["serial"])
+        return f"{board['serial']} installed (BIOS {bios})"

@@ -1,0 +1,14 @@
+{
+  "day": 14,
+  "title": "The SSD Pipeline",
+  "topic": "Higher-order functions: map, filter, reduce, sorted, decorators",
+  "floor": 3,
+  "machine": "SSD Pipeline",
+  "briefing": "The SSD floor is getting an automated pipeline: machines that take OTHER machines as inputs. In Python, functions can be passed around like any other value. It sounds mind-bending, but it's incredibly powerful. Oh, and security wants every label printer logged. A decorator can do that without touching the printer's code.",
+  "hints": [
+    "map(func, list) runs func on every item and filter(func, list) keeps the items where func is True. Both give back a lazy object, so wrap them in list(). reduce is imported from functools.",
+    "sorted(ssds, key=lambda s: s[\"health\"], reverse=True) sorts by health, best first. A decorator is a function that takes a function, defines an inner wrapper that does something extra before calling the original, and returns the wrapper.",
+    "gbs = list(map(lambda s: s[\"gb\"], ssds)) / healthy = list(filter(lambda s: s[\"health\"] >= 20, ssds)) / total_gb = reduce(lambda a, b: a + b, gbs) / ranked = sorted(ssds, key=lambda s: s[\"health\"], reverse=True) / def logged(func): def wrapper(*args): print(\"Running\", func.__name__); return func(*args) / return wrapper"
+  ],
+  "bonus": "Write a closure: make_checker(limit) that returns a lambda checking s[\"health\"] >= limit. Use it with filter to find drives above 90% health."
+}

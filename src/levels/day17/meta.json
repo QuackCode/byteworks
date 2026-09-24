@@ -1,0 +1,14 @@
+{
+  "day": 17,
+  "title": "The Board Tester",
+  "topic": "Exception handling: try, except, else, finally, raise",
+  "floor": 4,
+  "machine": "Board Tester",
+  "briefing": "Floor 4: motherboards, the heart of every PC. Here's the problem: every so often a faulty board comes down the line. Some have blown capacitors, and some are missing their BIOS chip. When the tester hits one, it raises an error, and right now that crashes the WHOLE line. Catch those errors, set the bad boards aside, and keep the line running!",
+  "hints": [
+    "Put the risky line inside try:. If it raises an error, Python jumps to a matching except block instead of crashing. Blown boards raise ValueError and missing-BIOS boards raise KeyError.",
+    "Use two except blocks: except ValueError as err: ... and except KeyError: .... finally: runs every time, error or not, which makes it the perfect place for checked += 1. To raise your own error: raise ValueError(\"message\").",
+    "for board in boards: try: tester.install(board) / except ValueError as err: print(\"Blown:\", err) and blown.append(board[\"serial\"]) / except KeyError: no_bios.append(board[\"serial\"]) / else: installed.append(board[\"serial\"]) / finally: checked += 1. check_volts: if volts > 1.5: raise ValueError(\"Voltage too high\"), then return True"
+  ],
+  "bonus": "Try except Exception as err: print(type(err).__name__) to catch ANY error and print its type. Why is catching everything usually a bad idea?"
+}
