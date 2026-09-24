@@ -7,9 +7,8 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "vitest run && npm run test:levels",
-    "test:levels": "sh -c 'if [ -x .venv/bin/python ]; then .venv/bin/python tests/run_levels.py; else python3 tests/run_levels.py; fi'",
-    "setup:py": "python3 -m venv .venv && .venv/bin/pip install numpy pandas beautifulsoup4"
+    "test": "vitest run && npm run test:py",
+    "test:py": "python3 -m unittest discover -s tests -p \"test_*.py\""
   },
   "dependencies": {
     "@codemirror/commands": "^6.11.1",
