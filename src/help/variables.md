@@ -77,6 +77,6 @@ while True:
 
 ## 🎯 Quest
 
-**Write a program that stops by itself once you have 100 RAM (use num_items).** Doing it lets you buy **Conditionals** (you'll still need its parts).
+**Write a program that collects 100 more RAM and then stops by itself (use num_items).** Doing it lets you buy **Conditionals** (you'll still need its parts).
 
-Wrap your route in `while num_items(Part.RAM) < 100:`. The program ends by itself as soon as the condition turns False.
+Save your target in a variable first, so it works however much RAM you already have: `goal = num_items(Part.RAM) + 100`. Then wrap your route in `while num_items(Part.RAM) < goal:`. The program ends by itself as soon as the condition turns False.

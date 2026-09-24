@@ -556,13 +556,15 @@ class QuestTests(unittest.TestCase):
 
     def test_finish_quest_needs_program_to_end_by_itself(self):
         w = quest_world("variables")
-        w.inventory["RAM"] = 150
-        run_program(w, {"main.py": "while num_items(Part.RAM) > 0:\n    harvest()\n    move(North)\n    harvest()\n    move(South)\n"}, max_ticks=3000)
+        w.inventory["RAM"] = 150                            # already rich: the quest must still be doable
+        sweep = "    harvest()\n    move(North)\n    harvest()\n    move(South)\n"
+        run_program(w, {"main.py": "while num_items(Part.RAM) > 0:\n" + sweep}, max_ticks=3000)
         self.assertNotIn("variables", w.quests)             # stopped, not finished
-        run_program(w, {"main.py": "while num_items(Part.RAM) < 100:\n    harvest()\n"})
-        self.assertNotIn("variables", w.quests)             # finished, but harvested nothing
-        w.inventory["RAM"] = 99
-        run_program(w, {"main.py": "while num_items(Part.RAM) < 100:\n    harvest()\n    move(North)\n    harvest()\n    move(South)\n"})
+        run_program(w, {"main.py": "while num_items(Part.RAM) < 100:\n" + sweep})
+        self.assertNotIn("variables", w.quests)             # finished, but collected nothing
+        run_program(w, {"main.py": "harvest()\nwhile num_items(Part.RAM) < 100:\n" + sweep})
+        self.assertNotIn("variables", w.quests)             # the old loophole: one harvest isn't 100 more
+        run_program(w, {"main.py": "goal = num_items(Part.RAM) + 100\nwhile num_items(Part.RAM) < goal:\n" + sweep})
         self.assertIn("variables", w.quests)
 
     def test_code_feature_quests(self):

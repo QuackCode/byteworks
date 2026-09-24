@@ -74,7 +74,7 @@ UNLOCKS = [
     Unlock("modules", "Modules", {"GPU": 40}, ("floor_gpu",), help="modules",
            summary="Your code windows can import each other, plus import math / random."),
     F("exceptions", "Exceptions", {"GPU": 60}, ["floor_gpu"], "try / except / finally and raise."),
-    SPEED(5, {"GPU": 250}, ["speed4", "floor_gpu"]),
+    SPEED(5, {"GPU": 200}, ["speed4", "floor_gpu"]),
     FLOOR("floor_assembly", "ASSEMBLY", "Final Assembly", {"GPU": 200}, ["exceptions"],
           "Fill customer orders to build complete computers."),
     F("classes", "Classes", {"COMPUTER": 1}, ["floor_assembly"], "Design your own objects."),
