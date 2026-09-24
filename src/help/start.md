@@ -37,6 +37,10 @@ A line starting with `#` is a **comment**. Python skips it, so it's a note for h
 print("This line runs")  # comments can go at the end of a line too
 ```
 
+## Code windows
+
+Click **+ New window** above the editor to make extra programs, like one for each floor. **▶ Run** runs the window that's open. The ✎ button renames a window and ✕ deletes it.
+
 ## Things take time
 
 Every action takes a moment of game time. A RAM stick needs a little while to **regrow** after you harvest it. Harvest too soon and you get nothing.

@@ -11,6 +11,7 @@ import { UpgradePanel } from "./UpgradePanel";
 import { HelpPanel } from "./HelpPanel";
 
 const AUTOSAVE_MS = 5000;
+const MAX_WINDOWS = 8;
 const MAX_LINES = 300;
 
 function isTyping(el: EventTarget | null) {
@@ -66,7 +67,7 @@ export function App() {
   const floorIndex = Math.max(0, FLOORS.findIndex((f) => f.id === viewFloor));
   const floor = FLOORS[floorIndex];
   const lockedBy = tree.find((u) => u.id === floor.unlock)?.title ?? "an upgrade";
-  const windows = 1 + tree.filter((u) => owned.has(u.id)).reduce((sum, u) => sum + u.windows, 0);
+  const windows = MAX_WINDOWS;   // code windows are free from the start; Modules unlocks `import` between them
   const affordable = world ? tree.filter((u) => !owned.has(u.id) && u.requires.every((r) => owned.has(r))
     && Object.entries(u.cost).every(([p, n]) => (world.inventory[p] ?? 0) >= n)).length : 0;
 
@@ -174,6 +175,12 @@ export function App() {
           onEdit={(text) => persist({ files: { ...saveRef.current.files, [saveRef.current.active]: text } })}
           onSelect={(name) => { persist({ active: name }); setEditKey((k) => k + 1); }}
           onAdd={(name) => { persist({ files: { ...saveRef.current.files, [name]: `# ${name}\n` }, active: name }); setEditKey((k) => k + 1); }}
+          onRename={(from, to) => {
+            const renamed: Record<string, string> = {};
+            for (const [name, code] of Object.entries(saveRef.current.files)) renamed[name === from ? to : name] = code;
+            persist({ files: renamed, active: saveRef.current.active === from ? to : saveRef.current.active });
+            setEditKey((k) => k + 1);
+          }}
           onDelete={(name) => {
             const { [name]: _gone, ...rest } = saveRef.current.files;
             persist({ files: rest, active: saveRef.current.active === name ? "main.py" : saveRef.current.active });

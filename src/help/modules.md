@@ -1,10 +1,10 @@
 # Modules
 
-Your programs are getting long. **Modules** let you split code across several **code windows**, which are really separate files.
+Your programs are getting long. **Modules** let your **code windows** (which are really separate files) use each other's code.
 
-## New code windows
+## Code windows
 
-Click **+ New window** above the editor and give it a name, like `helpers`. That makes `helpers.py`. You can now have up to 4 windows.
+You've been able to make extra windows all along: click **+ New window** above the editor and give it a name, like `helpers`. That makes `helpers.py` (the ✎ button renames the window that's open). Until now each window ran on its own. With Modules, one window can **import** another.
 
 A module is just a file full of code (usually functions) that other files can **import**:
 
