@@ -22,7 +22,7 @@
 - Game time only advances while a program runs. Speed upgrades change real-time speed only, never tick costs.
 - Every user-facing error names the line and says what to do next, in plain English aimed at complete beginners.
 - Wrap all `localStorage` access in try/catch.
-- Commit after every task with the trailer `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
+- Commit after every task.
 
 ## Review Focus
 
@@ -218,9 +218,7 @@ Expected: `Ran 3 tests ... OK`
 - [ ] **Step 7: Commit**
 
 ```bash
-git add -A && git commit -m "v2: remove tutorial levels, add friendly error module and Python test harness
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git add -A && git commit -m "v2: remove tutorial levels, add friendly error module and Python test harness"
 ```
 
 ---
@@ -494,9 +492,7 @@ Expected: all `WorldCoreTests` and `ErrorTests` pass.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add -A && git commit -m "v2: world core (RAM floor, movement, harvest, clock, state)
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git add -A && git commit -m "v2: world core (RAM floor, movement, harvest, clock, state)"
 ```
 
 ---
@@ -771,9 +767,7 @@ Expected: all tests pass.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add -A && git commit -m "v2: CPU/SSD/motherboard/GPU floor rules, lift and assembly orders
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git add -A && git commit -m "v2: CPU/SSD/motherboard/GPU floor rules, lift and assembly orders"
 ```
 
 ---
@@ -987,9 +981,7 @@ Expected: all pass.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add -A && git commit -m "v2: upgrade tree with floors, grid sizes, speeds and Python features
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git add -A && git commit -m "v2: upgrade tree with floors, grid sizes, speeds and Python features"
 ```
 
 ---
@@ -1176,9 +1168,7 @@ Expected: all pass.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add -A && git commit -m "v2: AST feature gating for locked Python features
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git add -A && git commit -m "v2: AST feature gating for locked Python features"
 ```
 
 ---
@@ -1574,9 +1564,7 @@ Expected: all pass. If `test_uncaught_faulty_board_is_friendly` reports a line i
 - [ ] **Step 7: Commit**
 
 ```bash
-git add -A && git commit -m "v2: player API, gated program runner and snippet sandbox
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git add -A && git commit -m "v2: player API, gated program runner and snippet sandbox"
 ```
 
 ---
@@ -1803,9 +1791,7 @@ After each change: `python3 -m unittest tests.test_progress -v`. Then run `npm r
 - [ ] **Step 5: Commit**
 
 ```bash
-git add -A && git commit -m "v2: reference bots prove the game can be finished; balance tuned
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git add -A && git commit -m "v2: reference bots prove the game can be finished; balance tuned"
 ```
 
 ---
@@ -2185,7 +2171,7 @@ game.start(null);
 log("isolated: " + game.isolated);
 ```
 
-Run `npx vite --port 5317`. Open `http://localhost:5317/` in Chrome (Claude-in-Chrome tools, new tab). Then run these in the page with the JavaScript tool, and check each expected result:
+Run `npx vite --port 5317`. Open `http://localhost:5317/` in Chrome (new tab). Then run these in the page with the JavaScript tool, and check each expected result:
 1. `await game.run({"main.py": "harvest()\nmove(East)\nprint('hi')"}, "main.py")` → `{ok: true, stopped: false}`, the log shows `print: hi`, and state lines arrive about 200 ms apart.
 2. `await game.run({"main.py": "while True:\n    harvest()"}, "main.py")` → `ok: false`, and the error names Loops (locked).
 3. Buy loops after farming: `game.latest.inventory.RAM` must be ≥ 5, so run program 1 a few times first. Then `await game.buy("loops")` → `ok: true`.
@@ -2198,9 +2184,7 @@ Run `npx vite --port 5317`. Open `http://localhost:5317/` in Chrome (Claude-in-C
 - [ ] **Step 8: Commit**
 
 ```bash
-git add -A && git commit -m "v2: Pyodide worker runs the world live with pacing, Stop and COI service worker
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git add -A && git commit -m "v2: Pyodide worker runs the world live with pacing, Stop and COI service worker"
 ```
 
 ---
@@ -2336,9 +2320,7 @@ Expected: 3 tests pass.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add -A && git commit -m "v2: save format with world state, code windows and settings
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git add -A && git commit -m "v2: save format with world state, code windows and settings"
 ```
 
 ---
@@ -2575,9 +2557,7 @@ Expected: all pass.
 - [ ] **Step 8: Commit**
 
 ```bash
-git add -A && git commit -m "v2: floor grid view with drone animation, assembly view and inventory bar
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git add -A && git commit -m "v2: floor grid view with drone animation, assembly view and inventory bar"
 ```
 
 ---
@@ -2979,9 +2959,7 @@ Expected: no type errors, all tests pass, build succeeds.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add -A && git commit -m "v2: playable game screen with code windows, run/stop, speed and console
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git add -A && git commit -m "v2: playable game screen with code windows, run/stop, speed and console"
 ```
 
 ---
@@ -3387,9 +3365,7 @@ With `npx vite --port 5317` running: a fresh load opens Help on "Welcome to Byte
 - [ ] **Step 11: Commit**
 
 ```bash
-git add -A && git commit -m "v2: upgrade tree panel, 21 help pages with tested examples, Try it boxes
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git add -A && git commit -m "v2: upgrade tree panel, 21 help pages with tested examples, Try it boxes"
 ```
 
 ---
@@ -3399,7 +3375,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 **Files:**
 - Rewrite: `README.md`
 - Modify: `.github/workflows/deploy.yml`
-- Modify: `/home/nathan/.claude/projects/-home-nathan/memory/byteworks_project.md` (project memory; outside the repo, not committed)
+- Update the project notes (outside the repo, not committed)
 
 **Interfaces:**
 - Consumes: everything.
@@ -3447,12 +3423,10 @@ Stop the preview and dev servers and close the tab afterwards.
 
 - [ ] **Step 5: Update the project memory**
 
-Rewrite `/home/nathan/.claude/projects/-home-nathan/memory/byteworks_project.md` so it describes v2: a TFWR-style automation game, core Python only, and the key paths (`src/python/game/`, `tests/test_progress.py`, `balance.py`). Keep the privacy note (only touch `~/projects/byteworks`). Update its line in `MEMORY.md` to match.
+Rewrite the project notes so they describes v2: a TFWR-style automation game, core Python only, and the key paths (`src/python/game/`, `tests/test_progress.py`, `balance.py`). Keep the privacy note (only touch `~/projects/byteworks`). Update its line in `MEMORY.md` to match.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add -A && git commit -m "v2: README and CI for the automation game
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git add -A && git commit -m "v2: README and CI for the automation game"
 ```
