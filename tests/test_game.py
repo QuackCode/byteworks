@@ -236,5 +236,56 @@ class UnlockTests(unittest.TestCase):
         self.assertEqual({d["kind"] for d in data} >= {"feature", "floor", "grid", "speed"}, True)
 
 
+from game.gating import check  # noqa: E402
+
+
+class GatingTests(unittest.TestCase):
+    def test_start_code_is_allowed(self):
+        self.assertEqual(check("# hi\nharvest()\nmove(East)\nprint('x')\n", set(), "main.py", set()), [])
+
+    def test_locked_while_is_reported_with_line_and_title(self):
+        problems = check("harvest()\nwhile True:\n    harvest()\n", set(), "main.py", set())
+        self.assertEqual(len(problems), 1)
+        self.assertIn("Line 2", problems[0])
+        self.assertIn("Loops", problems[0])
+
+    def test_unlocked_while_passes(self):
+        self.assertEqual(check("while True:\n    harvest()\n", {"loops"}, "main.py", set()), [])
+
+    def test_locked_api_function(self):
+        problems = check("while True:\n    if can_harvest():\n        harvest()\n", {"loops"}, "main.py", set())
+        self.assertTrue(any("Conditionals" in p for p in problems))
+
+    def test_locked_builtin(self):
+        problems = check("for i in range(3):\n    harvest()\n", {"loops", "for_loops"}, "main.py", set())
+        self.assertEqual(problems, [])
+        problems = check("x = len([1])\n", {"variables"}, "main.py", set())
+        self.assertTrue(any("Lists" in p for p in problems))
+
+    def test_forbidden_names_and_dunders(self):
+        self.assertTrue(check("open('x')\n", set(), "main.py", set()))
+        self.assertTrue(check("harvest.__globals__\n", set(), "main.py", set()))
+
+    def test_imports(self):
+        all_on = {"modules", "variables"}
+        self.assertEqual(check("import math\nimport helpers\n", all_on, "main.py", {"helpers"}), [])
+        self.assertTrue(check("import os\n", all_on, "main.py", set()))
+        self.assertTrue(check("import helpers\n", {"variables"}, "main.py", {"helpers"}))  # modules locked
+
+    def test_other_file_names_itself(self):
+        problems = check("while True:\n    pass\n", set(), "helpers.py", set())
+        self.assertIn("helpers.py line 1", problems[0])
+
+    def test_cannot_swallow_stop(self):
+        on = {"exceptions", "loops"}
+        self.assertTrue(check("try:\n    harvest()\nexcept:\n    pass\n", on, "main.py", set()))
+        self.assertTrue(check("try:\n    harvest()\nexcept BaseException:\n    pass\n", on, "main.py", set()))
+        self.assertEqual(check("try:\n    harvest()\nexcept Exception:\n    pass\n", on, "main.py", set()), [])
+
+    def test_syntax_error_is_friendly(self):
+        problems = check("harvest(\n", set(), "main.py", set())
+        self.assertIn("SyntaxError", problems[0])
+
+
 if __name__ == "__main__":
     unittest.main()
