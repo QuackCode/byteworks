@@ -161,3 +161,32 @@ code, pre { font-family: var(--mono); }
   .elevator { flex-direction: row; justify-content: center; }
   .floor-list { flex-direction: row-reverse; }
 }
+
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(560px, 100%); overflow-y: auto; z-index: 20; border-radius: 0; box-shadow: -8px 0 30px #0008; }
+.drawer-head { display: flex; justify-content: space-between; align-items: center; }
+.drawer-head h2 { margin: 0; }
+.help-topics { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+.chip { font: inherit; font-size: 0.85rem; background: var(--panel-2); color: var(--text); border: 1px solid var(--line); border-radius: 99px; padding: 3px 10px; cursor: pointer; }
+.chip.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.help-body h1 { font-size: 1.5rem; }
+.help-body h2 { font-size: 1.2rem; margin-top: 24px; }
+.help-body :not(pre) > code { background: var(--panel-2); padding: 1px 6px; border-radius: 5px; color: #ffd98a; }
+.help-body pre { background: #0f1218; border: 1px solid var(--line); border-radius: 8px; padding: 12px; overflow-x: auto; }
+.help-body code.language-py { color: #9fd3ff; }
+.help-body table { border-collapse: collapse; width: 100%; display: block; overflow-x: auto; }
+.help-body th, .help-body td { border: 1px solid var(--line); padding: 6px 10px; text-align: left; }
+.tryit code[contenteditable] { display: block; outline: none; white-space: pre; }
+.tryit-bar { display: flex; justify-content: flex-end; margin-top: 6px; }
+.tryit-out { background: #0a0d0a !important; color: #b9f5c4; white-space: pre-wrap; }
+.tryit-out.err { color: #ffb4a8; }
+.upgrade-list { list-style: none; padding: 0; display: grid; gap: 8px; }
+.upgrade { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: grid; gap: 6px; }
+.upgrade.next { opacity: 0.6; }
+.upgrade.kind-floor { border-color: var(--accent); }
+.upgrade-title { font-weight: 700; }
+.upgrade-summary, .upgrade-needs { color: var(--muted); font-size: 0.9rem; }
+.upgrade-cost { display: flex; gap: 6px; }
+.cost { font: 0.85rem var(--mono); background: #0f1218; border-radius: 6px; padding: 2px 6px; color: #ffb4a8; }
+.cost.ok { color: #b9f5c4; }
+.upgrade-msg { color: var(--accent); }
+.empty { color: var(--muted); }

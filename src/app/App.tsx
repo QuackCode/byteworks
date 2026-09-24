@@ -7,6 +7,8 @@ import { FloorView } from "./FloorView";
 import { InventoryBar } from "./InventoryBar";
 import { CodePanel, type ConsoleLine } from "./CodePanel";
 import { SaveDialog } from "./SaveDialog";
+import { UpgradePanel } from "./UpgradePanel";
+import { HelpPanel } from "./HelpPanel";
 
 const AUTOSAVE_MS = 5000;
 const MAX_LINES = 300;
@@ -165,7 +167,14 @@ export function App() {
 
       {status === "failed" && <div class="toast err">Python couldn't load. Check your internet connection and refresh.</div>}
 
-      {/* Task 12 adds: panel === "upgrades" → <UpgradePanel/>, panel === "help" → <HelpPanel/> */}
+      {panel === "upgrades" && world && (
+        <UpgradePanel tree={tree} world={world} running={running} onBuy={onBuy} onClose={() => setPanel("none")}
+          onHelp={(id) => { setHelpId(id); setPanel("help"); }} />
+      )}
+      {panel === "help" && (
+        <HelpPanel helpId={helpId} tree={tree} owned={owned} running={running}
+          onPick={setHelpId} onClose={() => setPanel("none")} />
+      )}
       {panel === "save" && (
         <SaveDialog save={save} running={running} onClose={() => setPanel("none")}
           onLoad={(loaded) => { persist(loaded); game.reload(loaded.world); setEditKey((k) => k + 1); setLines([]); }}
