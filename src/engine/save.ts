@@ -1,6 +1,6 @@
 import type { WorldState } from "./types";
 
-export interface Settings { speed: number; follow: boolean }
+export interface Settings { speed: number; follow: boolean; skin?: string }
 export interface Save { v: 2; world: WorldState | null; files: Record<string, string>; active: string; settings: Settings }
 
 const KEY = "byteworks.save.v2";

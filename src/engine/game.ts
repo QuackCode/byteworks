@@ -1,5 +1,5 @@
 import GameWorker from "./python.worker?worker";
-import type { BuyResult, RunResult, RunnerStatus, SnippetResult, UnlockInfo, WorldState } from "./types";
+import type { BuyResult, RunResult, RunnerStatus, SkinInfo, SnippetResult, UnlockInfo, WorldState } from "./types";
 
 const packageFiles = import.meta.glob("../python/game/*.py", { query: "?raw", import: "default", eager: true }) as Record<string, string>;
 const STOP_WATCHDOG_MS = 1500; // if an interrupt doesn't land in time, restart the worker instead
@@ -128,6 +128,18 @@ export class GameRunner {
     const result = JSON.parse((await this.call({ type: "buy", unlock: unlockId })) as string) as BuyResult;
     this.setState(result.state, 0);
     return result;
+  }
+
+  async buySkin(skinId: string): Promise<BuyResult> {
+    await this.ready;
+    const result = JSON.parse((await this.call({ type: "buySkin", skin: skinId })) as string) as BuyResult;
+    this.setState(result.state, 0);
+    return result;
+  }
+
+  async skins(): Promise<SkinInfo[]> {
+    await this.ready;
+    return JSON.parse((await this.call({ type: "skins" })) as string);
   }
 
   async tree(): Promise<UnlockInfo[]> {

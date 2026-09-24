@@ -3,6 +3,22 @@
 // filters live in <ArtDefs/>, which App renders once so every SVG on the page can use them.
 import { memo } from "preact/compat";
 
+// Drone skins: [shell gradient top, bottom], plus body, trim, vent and eye colours
+const SKIN_SHELLS: Record<string, [string, string]> = {
+  classic: ["#ffd36b", "#d98f12"], pink: ["#ff8ad8", "#e0268f"], ocean: ["#6ff0e0", "#1a9aa0"],
+  stealth: ["#3a3f48", "#15181d"], toxic: ["#c6ff5a", "#4fbf1a"], gold: ["#fff2b0", "#c9941a"],
+};
+interface SkinLook { shell: string; body: string; trim: string; vent: string; eye: string }
+const SKIN_LOOKS: Record<string, SkinLook> = {
+  classic: { shell: "url(#g-skin-classic)", body: "url(#g-gunmetal)", trim: "#8a5a00", vent: "#7a4f00", eye: "#5ce1ff" },
+  pink: { shell: "url(#g-skin-pink)", body: "url(#g-gunmetal)", trim: "#8a1356", vent: "#7a0f48", eye: "#ffffff" },
+  ocean: { shell: "url(#g-skin-ocean)", body: "url(#g-gunmetal)", trim: "#0d5c60", vent: "#0b4f52", eye: "#ffffff" },
+  stealth: { shell: "url(#g-skin-stealth)", body: "#101216", trim: "#000000", vent: "#2c3038", eye: "#ff3030" },
+  toxic: { shell: "url(#g-skin-toxic)", body: "#1d2a14", trim: "#2e6b0a", vent: "#2a5e0a", eye: "#b6ff3b" },
+  rgb: { shell: "url(#g-skin-rgb)", body: "#15171c", trim: "#000000", vent: "#00000088", eye: "#ffffff" },
+  gold: { shell: "url(#g-skin-gold)", body: "url(#g-skin-gold)", trim: "#7a5a00", vent: "#8a6400", eye: "#5ce1ff" },
+};
+
 export function ArtDefs() {
   return (
     <svg class="art-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -31,8 +47,19 @@ export function ArtDefs() {
         <linearGradient id="g-gunmetal" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stop-color="#5a6477" /><stop offset="1" stop-color="#262c38" />
         </linearGradient>
-        <linearGradient id="g-amber" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#ffd36b" /><stop offset="1" stop-color="#d98f12" />
+        {/* drone skins: shell colours */}
+        {Object.entries(SKIN_SHELLS).map(([id, [a, b]]) => (
+          <linearGradient key={id} id={`g-skin-${id}`} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color={a} /><stop offset="1" stop-color={b} />
+          </linearGradient>
+        ))}
+        <linearGradient id="g-skin-rgb" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#ff3b6b">
+            <animate attributeName="stop-color" values="#ff3b6b;#ffd23b;#3bff8a;#3bb8ff;#b63bff;#ff3b6b" dur="3s" repeatCount="indefinite" />
+          </stop>
+          <stop offset="1" stop-color="#3bb8ff">
+            <animate attributeName="stop-color" values="#3bb8ff;#b63bff;#ff3b6b;#ffd23b;#3bff8a;#3bb8ff" dur="3s" repeatCount="indefinite" />
+          </stop>
         </linearGradient>
         <linearGradient id="g-plate" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stop-color="#2a303c" /><stop offset="1" stop-color="#1c2029" />
@@ -242,8 +269,9 @@ export function ScoreBadge({ score }: { score: number }) {
 }
 
 /** The factory drone, seen from above. `facing` is degrees clockwise from North. */
-export function Drone({ facing, stunned }: { facing: number; stunned: boolean }) {
-  const eye = stunned ? "#ff4d4d" : "#5ce1ff";
+export function Drone({ facing, stunned, skin = "classic" }: { facing: number; stunned: boolean; skin?: string }) {
+  const look = SKIN_LOOKS[skin] ?? SKIN_LOOKS.classic;
+  const eye = stunned ? "#ff4d4d" : look.eye;
   const rotors: [number, number][] = [[24, 24], [76, 24], [24, 76], [76, 76]];
   return (
     <g class={stunned ? "drone-art stunned" : "drone-art"}>
@@ -263,9 +291,9 @@ export function Drone({ facing, stunned }: { facing: number; stunned: boolean })
           ))}
           {/* grabber claws point the way the drone is flying */}
           <path d="M43 26l-4-8 5-4M57 26l4-8-5-4" fill="none" stroke="#aab4c4" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
-          <path d="M35 32l7-8h16l7 8v26l-7 10H42l-7-10z" fill="url(#g-gunmetal)" stroke="#12151b" stroke-width="1.4" />
-          <path d="M39 39l5-5h12l5 5v17l-5 6H44l-5-6z" fill="url(#g-amber)" stroke="#8a5a00" stroke-width="0.8" />
-          <path d="M44 47h12M44 51h12M44 55h12" stroke="#7a4f00" stroke-width="1.3" stroke-linecap="round" />
+          <path d="M35 32l7-8h16l7 8v26l-7 10H42l-7-10z" fill={look.body} stroke="#12151b" stroke-width="1.4" />
+          <path d="M39 39l5-5h12l5 5v17l-5 6H44l-5-6z" fill={look.shell} stroke={look.trim} stroke-width="0.8" />
+          <path d="M44 47h12M44 51h12M44 55h12" stroke={look.vent} stroke-width="1.3" stroke-linecap="round" />
           <circle cx="50" cy="31" r="7" fill="#0b0e13" stroke="#aab4c4" stroke-width="1.2" />
           <circle cx="50" cy="31" r="3.6" fill={eye} filter="url(#f-glow)" class="drone-eye" />
           <circle cx="48.6" cy="29.6" r="1" fill="#ffffff" opacity="0.8" />

@@ -3,13 +3,14 @@ export interface FloorState { size: number; grid: Tile[][] }            // grid[
 export interface WorldState {
   seed: number; clock: number; inventory: Record<string, number>; unlocks: string[]; speed_level: number;
   floors: Record<string, FloorState>; floor: string; x: number; y: number;
-  order: Record<string, number> | null; orders_done: number; bumped?: boolean; quests?: string[]; rng: unknown;
+  order: Record<string, number> | null; orders_done: number; bumped?: boolean; quests?: string[]; skins?: string[]; rng: unknown;
 }
 export interface UnlockInfo {
   id: string; title: string; cost: Record<string, number>; requires: string[]; summary: string;
   help: string | null; kind: "feature" | "floor" | "grid" | "speed" | "other"; windows: number;
   quest: { id: string; title: string; page: string } | null;
 }
+export interface SkinInfo { id: string; name: string; cost: Record<string, number>; blurb: string }
 export interface RunResult { ok: boolean; stopped: boolean; error?: string; state: WorldState }
 export interface BuyResult { ok: boolean; message: string; state: WorldState }
 export interface SnippetResult { stdout: string; error: string | null }

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { game } from "../engine/game";
-import type { RunnerStatus, UnlockInfo, WorldState } from "../engine/types";
+import type { RunnerStatus, SkinInfo, UnlockInfo, WorldState } from "../engine/types";
 import { emptySave, loadSave, storeSave, type Save } from "../engine/save";
 import { FLOORS } from "../floors";
 import { FloorView } from "./FloorView";
@@ -8,6 +8,7 @@ import { InventoryBar } from "./InventoryBar";
 import { CodePanel, type ConsoleLine } from "./CodePanel";
 import { SaveDialog } from "./SaveDialog";
 import { ArtDefs, PartIcon } from "./art";
+import { SkinsPanel } from "./SkinsPanel";
 import { UpgradePanel } from "./UpgradePanel";
 import { HelpPanel } from "./HelpPanel";
 
@@ -28,9 +29,10 @@ export function App() {
   const [running, setRunning] = useState(false);
   const [stopping, setStopping] = useState(false);
   const [tree, setTree] = useState<UnlockInfo[]>([]);
+  const [skins, setSkins] = useState<SkinInfo[]>([]);
   const [lines, setLines] = useState<ConsoleLine[]>([]);
   const [viewFloor, setViewFloor] = useState(save.world?.floor ?? "RAM");
-  const [panel, setPanel] = useState<"none" | "upgrades" | "help" | "save">(save.world ? "none" : "help");
+  const [panel, setPanel] = useState<"none" | "upgrades" | "help" | "save" | "skins">(save.world ? "none" : "help");
   const [helpId, setHelpId] = useState("start");
   const [editKey, setEditKey] = useState(0);
 
@@ -55,6 +57,7 @@ export function App() {
     game.setSpeed(1);   // no fast-forward: real-time speed comes only from Drone Speed upgrades
     game.start(save.world);
     game.tree().then(setTree).catch(() => addLine("Couldn't load the upgrade tree. Refresh the page.", "err"));
+    game.skins().then(setSkins).catch(() => {});
     const timer = setInterval(() => { if (game.running && game.latest) persist({ world: game.latest }); }, AUTOSAVE_MS);
     return () => clearInterval(timer);
   }, []);
@@ -117,6 +120,7 @@ export function App() {
   };
 
   const files = save.files;
+  const equippedSkin = world?.skins?.includes(save.settings.skin ?? "") ? save.settings.skin! : "classic";
   return (
     <div class="app">
       <ArtDefs />
@@ -126,6 +130,7 @@ export function App() {
         <span class="spacer" />
         <button class="btn" onClick={() => setPanel("upgrades")}>⬆️ Upgrades{affordable > 0 && <span class="badge">{affordable}</span>}</button>
         <button class="btn" onClick={() => setPanel("help")}>📖 Help</button>
+        <button class="btn" onClick={() => setPanel("skins")}>🎨 Skins</button>
         <button class="btn" onClick={() => setPanel("save")}>💾 Save</button>
       </header>
 
@@ -168,7 +173,7 @@ export function App() {
               </p>
             )}
             {world
-              ? <FloorView floor={floor} world={world} animMs={animMs} locked={!!floor.unlock && !owned.has(floor.unlock)} lockedBy={lockedBy} />
+              ? <FloorView floor={floor} world={world} animMs={animMs} locked={!!floor.unlock && !owned.has(floor.unlock)} lockedBy={lockedBy} skin={equippedSkin} />
               : <div class="floor-locked">Starting the factory…</div>}
           </div>
         </section>
@@ -202,12 +207,16 @@ export function App() {
         <HelpPanel helpId={helpId} tree={tree} owned={owned} questsDone={new Set(world?.quests ?? [])} running={running}
           onPick={setHelpId} onClose={() => setPanel("none")} />
       )}
+      {panel === "skins" && world && (
+        <SkinsPanel skins={skins} world={world} equipped={equippedSkin} running={running} onClose={() => setPanel("none")}
+          onBuy={async (id) => { const r = await game.buySkin(id); persist({ world: r.state }); return r; }}
+          onEquip={(id) => persist({ settings: { ...saveRef.current.settings, skin: id } })} />
+      )}
       {panel === "save" && (
         <SaveDialog save={save} running={running} onClose={() => setPanel("none")}
           onLoad={(loaded) => { persist(loaded); game.reload(loaded.world); setEditKey((k) => k + 1); setLines([]); }}
           onResetAll={() => { const fresh = emptySave(); persist(fresh); game.reload(null); setEditKey((k) => k + 1); setLines([]); setPanel("help"); setHelpId("start"); }} />
       )}
-      <footer class="foot">Inspired by <em>The Farmer Was Replaced</em>. Python runs in your browser with Pyodide. ▲ ▼ or arrow keys change floors.</footer>
     </div>
   );
 }

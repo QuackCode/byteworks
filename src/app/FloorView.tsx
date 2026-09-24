@@ -6,9 +6,9 @@ import { Drone, PartArt, PartIcon, ScoreBadge } from "./art";
 
 const CELL = 100;
 
-interface Props { floor: FloorInfo; world: WorldState; animMs: number; locked: boolean; lockedBy: string }
+interface Props { floor: FloorInfo; world: WorldState; animMs: number; locked: boolean; lockedBy: string; skin: string }
 
-export function FloorView({ floor, world, animMs, locked, lockedBy }: Props) {
+export function FloorView({ floor, world, animMs, locked, lockedBy, skin }: Props) {
   const prev = useRef<DronePos | null>(null);
   const heading = useRef(0);
   const state = world.floors[floor.id];
@@ -53,7 +53,7 @@ export function FloorView({ floor, world, animMs, locked, lockedBy }: Props) {
       }))}
       {world.floor === floor.id && (
         <g class="drone" style={{ transform: `translate(${world.x * CELL}px, ${svgRow(world.y, n) * CELL}px)`, transitionDuration: `${duration}ms` }}>
-          <Drone facing={heading.current} stunned={!!world.bumped} />
+          <Drone facing={heading.current} stunned={!!world.bumped} skin={skin} />
         </g>
       )}
     </svg>

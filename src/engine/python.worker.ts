@@ -59,6 +59,8 @@ self.onmessage = async (e: MessageEvent) => {
       result = glue.run(e.data.files, e.data.entry);
     } else if (type === "buy") result = glue.buy(e.data.unlock);
     else if (type === "tree") result = glue.tree();
+    else if (type === "buySkin") result = glue.buy_skin(e.data.skin);
+    else if (type === "skins") result = glue.skin_list();
     else if (type === "snippet") result = glue.snippet(e.data.code);
     else if (type === "new") result = glue.new_game();
     self.postMessage({ id, ok: true, result });

@@ -603,5 +603,45 @@ class QuestTests(unittest.TestCase):
         self.assertTrue(all(tree[u.id]["quest"] for u in gated), "every Python feature needs a quest")
 
 
+from game import skins as SK  # noqa: E402
+
+
+class SkinTests(unittest.TestCase):
+    def test_classic_is_free_and_owned(self):
+        self.assertIn("classic", World().skins)
+        self.assertEqual(SK.BY_ID["classic"].cost, {})
+
+    def test_buying_a_skin_pays_the_silly_price(self):
+        w = World()
+        price = SK.BY_ID["stealth"].cost
+        ok, msg = SK.buy(w, "stealth")
+        self.assertFalse(ok)
+        self.assertIn("Not enough", msg)
+        w.inventory.update({p: n for p, n in price.items()})
+        ok, _ = SK.buy(w, "stealth")
+        self.assertTrue(ok)
+        self.assertIn("stealth", w.skins)
+        self.assertTrue(all(w.inventory[p] == 0 for p in price))
+        self.assertFalse(SK.buy(w, "stealth")[0])           # already owned
+        self.assertFalse(SK.buy(w, "no_such_skin")[0])
+
+    def test_skins_are_saved_and_unknown_ones_dropped(self):
+        w = World()
+        w.skins.add("gold")
+        state = w.to_state()
+        state["skins"].append("retired_skin")
+        loaded, ok = World.load(state)
+        self.assertTrue(ok)
+        self.assertEqual(loaded.skins, {"classic", "gold"})
+        del state["skins"]
+        self.assertEqual(World.load(state)[0].skins, {"classic"})
+
+    def test_skin_list_is_plain_data(self):
+        import json
+        data = json.loads(json.dumps(SK.skins_json()))
+        self.assertEqual(data[0]["id"], "classic")
+        self.assertTrue(all({"id", "name", "cost", "blurb"} <= set(d) for d in data))
+
+
 if __name__ == "__main__":
     unittest.main()

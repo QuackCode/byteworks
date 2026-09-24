@@ -10,7 +10,7 @@ import time
 
 import bw_bridge
 
-from . import sandbox, unlocks
+from . import sandbox, skins, unlocks
 from .runner import run_program
 from .world import World
 
@@ -87,6 +87,15 @@ def run(files_json, entry):
 def buy(unlock_id):
     ok, message = unlocks.buy(WORLD, unlock_id)
     return json.dumps({"ok": ok, "message": message, "state": WORLD.to_state()})
+
+
+def buy_skin(skin_id):
+    ok, message = skins.buy(WORLD, skin_id)
+    return json.dumps({"ok": ok, "message": message, "state": WORLD.to_state()})
+
+
+def skin_list():
+    return json.dumps(skins.skins_json())
 
 
 def tree():
