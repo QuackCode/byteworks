@@ -90,7 +90,7 @@ upgrade costs live in `src/python/game/unlocks.py`. After a change, run
 python3 -m unittest tests.test_progress -v
 ```
 
-It prints how long the reference bots take to finish (the target is roughly 1.5–3 hours of drone time at x1 speed).
+It prints how long the reference bots take, and **fails if any upgrade (or any computer at the end) needs more than 5 minutes of waiting**. There's no fast-forward button, so this keeps the game moving.
 
 ---
 
