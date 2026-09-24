@@ -149,6 +149,20 @@ export function App() {
                 Follow drone
               </label>
             </div>
+            {world && world.floor !== floor.id && !(floor.unlock && !owned.has(floor.unlock)) && (
+              <p class="drone-elsewhere">
+                🤖 Your drone is on the {FLOORS.find((f) => f.id === world.floor)?.name ?? world.floor}.
+                Bring it here with <code>goto_floor(Floor.{floor.id})</code> in your code.
+              </p>
+            )}
+            {world && floor.unlock && owned.has(floor.unlock) && floor.id !== "ASSEMBLY"
+              && world.floors[floor.id]?.grid.every((col) => col.every((tile) => tile[0] === null)) && (
+              <p class="drone-elsewhere">
+                🧱 This floor starts empty. Build parts here with <code>place(Part.{floor.id})</code>, let them finish,
+                then <code>harvest()</code>.{" "}
+                <button class="linkish" onClick={() => { setHelpId(floor.unlock!); setPanel("help"); }}>How does this floor work?</button>
+              </p>
+            )}
             {world
               ? <FloorView floor={floor} world={world} animMs={animMs} locked={!!floor.unlock && !owned.has(floor.unlock)} lockedBy={lockedBy} />
               : <div class="floor-locked">Starting the factory…</div>}

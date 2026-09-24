@@ -194,3 +194,7 @@ code, pre { font-family: var(--mono); }
 .cost.ok { color: #b9f5c4; }
 .upgrade-msg { color: var(--accent); }
 .empty { color: var(--muted); }
+
+.drone-elsewhere { margin: 0 0 8px; padding: 6px 10px; border-radius: 8px; background: var(--panel-2); color: var(--muted); font-size: 0.9rem; }
+.drone-elsewhere code { color: #ffd98a; }
+.linkish { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; font: inherit; }
