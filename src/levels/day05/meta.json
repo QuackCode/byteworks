@@ -1,0 +1,14 @@
+{
+  "day": 5,
+  "title": "The RAM Conveyor",
+  "topic": "Lists",
+  "floor": 1,
+  "machine": "RAM Conveyor",
+  "briefing": "Floor 1 is open: the RAM line! RAM sticks ride along a conveyor belt, and in Python that belt is a list. A new stick has arrived, one stick is faulty and has to come off, and the tester wants the first stick on the belt. Keep the belt in order!",
+  "hints": [
+    "List methods use a dot, like strings: belt.append(x) adds to the end and belt.remove(x) takes out that exact item.",
+    "belt.pop(0) removes the first item AND gives it back, so save it: tester = belt.pop(0). belt.sort() sorts the belt in place. belt[0] is the first item and belt[-1] is the last.",
+    "belt.append(new_stick), belt.remove(faulty_stick), tester = belt.pop(0), belt.sort(), count = len(belt), first_on_belt = belt[0], last_on_belt = belt[-1]"
+  ],
+  "bonus": "Make a copy of the belt with belt.copy(), reverse the copy with .reverse(), and print both. Did the original change?"
+}

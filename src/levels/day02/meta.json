@@ -1,0 +1,14 @@
+{
+  "day": 2,
+  "title": "The Control Panel",
+  "topic": "Variables, input() and built-in functions",
+  "floor": 0,
+  "machine": "Control Panel",
+  "briefing": "Power's on! Now the control panel needs setting up. It stores the factory's settings in variables: labelled boxes that remember values. It also needs to greet whoever's working the shift. Get it wrong and the panel forgets everything!",
+  "hints": [
+    "Make a variable with name = value, e.g. machines = 3. Text goes in quotes, numbers don't, and True/False have capital letters.",
+    "len(factory_name) counts the letters in factory_name. input() gives you back whatever the operator typed, so save it: operator = input(\"Your name: \").",
+    "factory_name = \"ByteWorks\", machines = 3, power_kw = 12.5, is_open = True, name_length = len(factory_name), operator = input(\"Your name: \") then print(\"Welcome,\", operator)"
+  ],
+  "bonus": "Use int() to turn the string \"42\" into a number, add 8 to it and print the result. What happens if you try \"42\" + 8 instead?"
+}

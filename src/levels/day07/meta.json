@@ -1,0 +1,14 @@
+{
+  "day": 7,
+  "title": "The Serial Scanner",
+  "topic": "Sets",
+  "floor": 1,
+  "machine": "Serial Scanner",
+  "briefing": "The scanner at the end of the RAM line has a stutter: it scans some sticks twice. Head office wants the real count of different sticks. We're also choosing between two suppliers, so work out which RAM models they both sell. Sets are perfect for both jobs.",
+  "hints": [
+    "set(scanned) makes a set, which throws away duplicates automatically. The number of duplicates is the list's length minus the set's length.",
+    "Set operators: a & b gives what's in both, a | b gives everything, and a - b gives what's in a but not b. Use in to check membership.",
+    "unique = set(scanned), duplicates = len(scanned) - len(unique), in_both = supplier_a & supplier_b, all_models = supplier_a | supplier_b, only_a = supplier_a - supplier_b, a_sells_ddr5 = \"DDR5\" in supplier_a"
+  ],
+  "bonus": "Try supplier_a ^ supplier_b (the symmetric difference). What does it give you? Also look up .issubset()."
+}

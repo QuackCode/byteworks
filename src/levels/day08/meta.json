@@ -1,0 +1,14 @@
+{
+  "day": 8,
+  "title": "The RAM Warehouse",
+  "topic": "Dictionaries",
+  "floor": 1,
+  "machine": "RAM Warehouse",
+  "briefing": "The RAM warehouse keeps stock in a dictionary: each RAM model is a key, and how many we have is its value. Today a delivery has arrived, we're adding a new model, retiring the old DDR3, and filling a customer order. Keep the books straight and Floor 1 is finished!",
+  "hints": [
+    "Read or change a value with its key: inventory[\"DDR5\"]. You can use += on it, and assigning to a new key adds it.",
+    "inventory.pop(\"DDR3\") removes that key and gives back its value. order is a dict too, so order[\"model\"] tells you WHICH model to take from. sum(inventory.values()) adds up all the stock.",
+    "inventory[\"DDR5\"] += delivery, inventory[\"LPDDR5\"] = 20, retired = inventory.pop(\"DDR3\"), inventory[order[\"model\"]] -= order[\"qty\"], total_sticks = sum(inventory.values()), models = list(inventory.keys())"
+  ],
+  "bonus": "Use inventory.get(\"DDR9\", 0) to look up a model that doesn't exist without crashing. Then try inventory[\"DDR9\"] and read the error."
+}
