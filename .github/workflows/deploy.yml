@@ -28,9 +28,8 @@ jobs:
         with:
           python-version: "3.14"
       - run: npm ci
-      - run: pip install numpy pandas beautifulsoup4
       - run: npx vitest run
-      - run: python tests/run_levels.py
+      - run: python -m unittest discover -s tests -p "test_*.py"
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:

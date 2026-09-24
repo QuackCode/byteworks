@@ -1,37 +1,45 @@
 # 🏭 ByteWorks
 
-**Learn Python by rebuilding a computer factory.** A free browser game that teaches complete beginners
-everything in [30 Days of Python](https://github.com/Asabeneh/30-Days-Of-Python), one factory shift at a time.
+**Learn Python by programming a drone to rebuild a computer factory.** A free browser game in the style of
+*The Farmer Was Replaced*. You write real Python, watch your drone carry it out live, earn computer parts,
+and spend them on upgrades that unlock new Python features, faster drones, bigger floors and new factory floors.
 
-Each floor of the factory builds a different computer part. Every day you learn a new Python idea and
-use it to get a machine running: a `while` loop keeps the CPU press going, `try/except` stops a faulty
-motherboard from crashing the line, pandas prints the weekly GPU report. On Day 30 you put it all
-together and ship finished computers.
+## How to play
 
-| Floor | Days | Topics |
-|---|---|---|
-| G · Control Room | 1–4 | print, variables, operators, strings |
-| 1 · RAM | 5–8 | lists, tuples, sets, dictionaries |
-| 2 · CPU | 9–12 | conditionals, loops, functions, modules |
-| 3 · Storage | 13–16 | comprehensions & lambdas, higher-order functions, error types, datetime |
-| 4 · Motherboard | 17–21 | exception handling, regex, file handling, pip, classes |
-| 5 · GPU | 22–25 | web scraping, virtual environments, NumPy, pandas |
-| 6 · Shipping & Orders | 26–29 | Flask, MongoDB, using APIs, building an API |
-| 7 · Final Assembly | 30 | the boss level: everything together |
+1. Write code in the editor (`harvest()`, `move(North)`, …) and press **▶ Run** (or Ctrl + Enter).
+2. The drone does exactly what you wrote. A `while True:` loop keeps it going until you press **■ Stop**.
+3. Parts you harvest are money. Open **⬆️ Upgrades** to buy new Python features, speed, grid sizes and floors.
+4. Every unlock opens a **📖 Help** page with a beginner explanation and "Try it" examples.
+5. The goal: build **10 complete computers** at Final Assembly.
+
+| Floor | Puzzle |
+|---|---|
+| 🧠 RAM | sticks regrow a moment after you harvest them |
+| 🔲 CPU | `place()` chips and let them bake. Harvest too early and they're destroyed |
+| 💾 SSD | cost RAM + CPUs to build, so plan across floors |
+| 🟩 Motherboard | about 1 in 5 boards come out **faulty**, and harvesting one crashes your program. A full square of good boards merges into a big one worth size³ |
+| 🎮 GPU | chips have scores. Sort the whole grid with `swap()` for a huge bonus |
+| 🖥️ Final Assembly | fill customer orders (dictionaries of parts) to build computers |
+
+## What you learn
+
+Covers the core of [30 Days of Python](https://github.com/Asabeneh/30-Days-Of-Python): comments & print → loops →
+variables & operators → conditionals → for & range → tuples → functions → lists → strings & f-strings → sets →
+dictionaries → comprehensions & lambda → higher-order functions → modules (several code windows that import each
+other) → error types & exceptions → classes.
 
 ## How it works
 
-- **Python runs in the player's browser** using [Pyodide](https://pyodide.org) (in a Web Worker).
-  There's no server, so hosting is free and any number of people can play at once.
-- **Infinite loops can't freeze the page.** Runs time out after 6 seconds, and Python restarts.
-- **Each level is checked by Python code** (`check.py`) that runs the player's code against several
-  *seeded* random scenarios. Faulty parts appear in different places each test, so hard-coded
-  answers don't pass. Failures are explained in plain English.
-- **Progress saves in the browser** (localStorage). The 💾 Save button gives a save code for moving
-  progress to another device.
-- Things a browser can't really do are **simulated** with factory-themed fakes that behave like the
-  real libraries: `pip`, virtual environments, `requests` (the websites and APIs), `flask` and `pymongo`.
-  NumPy, pandas and BeautifulSoup are the real thing.
+- **Python runs in the player's browser** with [Pyodide](https://pyodide.org), in a Web Worker that holds the whole
+  factory **and** runs the player's program. Each drone action advances a game clock, then waits in real time
+  (`Atomics.wait`) so you can watch it happen.
+- **Stop** uses Pyodide's interrupt buffer. If the page isn't cross-origin isolated, the game falls back to
+  busy-waiting, and Stop restarts the worker from the latest saved state.
+- **GitHub Pages can't set headers**, so `public/coi-serviceworker.min.js` adds the cross-origin isolation headers.
+- **Locked features**: before running, the code is checked with Python's `ast` module, and anything not yet unlocked
+  is reported with its line number.
+- **Progress saves in the browser** (localStorage). The 💾 Save button gives a save code for moving it to another device.
+- There's no server, so hosting is free and any number of people can play at once.
 
 ## Put it online (free, runs 24/7, your computer can be off)
 
@@ -41,12 +49,12 @@ together and ship finished computers.
    git push -u origin main
    ```
 2. On GitHub, open **Settings → Pages** and set **Source** to **GitHub Actions**.
-3. The workflow in `.github/workflows/deploy.yml` tests the levels, builds the site and publishes it.
+3. The workflow in `.github/workflows/deploy.yml` runs the tests, builds the site and publishes it.
    After a minute or two the game is live at `https://<your-username>.github.io/byteworks/`.
 
 Every later push to `main` updates the site automatically.
 
-## Run it on your computer
+## Run it locally
 
 ```sh
 npm install
@@ -56,34 +64,34 @@ npm run dev          # open the address it prints
 ## Tests
 
 ```sh
-npm run setup:py     # once: a .venv with numpy, pandas and bs4 for the level tests
-npm test             # unit tests + every level: solution passes, starter code fails
-npm run build        # production build into dist/
+npm test
 ```
+
+This runs the vitest unit tests, the Python game-rule tests, a check that every help-page example works (and only
+uses features unlocked at that point), and a **full playthrough by reference bots** that proves the game can be
+finished.
 
 ## Project layout
 
 ```
-src/
-  app/            the website (Preact): floors, lift, lessons, editor, save dialog
-  engine/         Pyodide worker, runner (timeouts), save + progress logic
-  python/factory/ the Python package the levels use: checker, machines, simulated pip/web/mongo
-  levels/dayNN/   one folder per day:
-    meta.json       title, floor, briefing, 3 hints, bonus challenge
-    lesson.md       the lesson (```python blocks become runnable "Try it" boxes)
-    starter.py      the code the player starts with (blanks are ____)
-    solution.py     a reference answer (never shown to players)
-    check.py        setup(world) gives the player their data; check(ctx) tests their code
-tests/            vitest unit tests + tests/run_levels.py
+src/python/game/   the whole game in Python: world rules, upgrade tree, feature gating, player API, runner
+src/engine/        Pyodide worker, GameRunner (pacing, Stop, restarts), save format
+src/app/           the Preact UI: floors + drone, code windows, console, upgrades, help
+src/help/*.md      one help page per unlock (python blocks = runnable, py blocks = drone examples)
+tests/             Python unit tests, help-page tests, reference bots + playthrough, vitest
 ```
 
-### Adding or changing a level
+## Tuning the game
 
-Edit the files in `src/levels/dayNN/`, then run `npm run test:levels`. It checks that the solution
-passes and the starter code fails with a message. In `check.py`, `ctx.run(seed)` runs the player's
-code, `ctx.expect(condition, "friendly message")` tests it, and `ctx.show("part", label=..., result="ship")`
-animates parts on the factory floor.
+All the numbers (tick costs, grow times, yields, prices, order sizes) live in `src/python/game/balance.py`, and
+upgrade costs live in `src/python/game/unlocks.py`. After a change, run
+
+```sh
+python3 -m unittest tests.test_progress -v
+```
+
+It prints how long the reference bots take to finish (the target is roughly 1.5–3 hours of drone time at x1 speed).
 
 ---
 
-Curriculum based on *30 Days of Python* by Asabeneh Yetayeh.
+Curriculum based on *30 Days of Python* by Asabeneh Yetayeh. Game idea inspired by *The Farmer Was Replaced*.
